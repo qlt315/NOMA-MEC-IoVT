@@ -1,5 +1,6 @@
 # NOMA-MEC-IoVT
-Simulation code of our paper ''Edge Offloading and Resource Allocation in NOMA-assisted IoVT"
+Simulation code of our paper ''Joint Transmission and Resource Optimization in
+NOMA-assisted IoVT with Mobile Edge Computing"
 
 Special thanks to FengqianGuo@Tencent for his support of the coding works！
 
