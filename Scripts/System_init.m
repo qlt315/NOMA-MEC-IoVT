@@ -17,7 +17,6 @@ N = 20;  % Number of users
 M = 4;   % Number of BS
 G = 5;  % Number of group of each BS
 cvx_solver Sedumi
-rng(315);
 User_location_X = rand(1,N)*600;
 User_location_Y = rand(1,N)*600;
 
