@@ -8,4 +8,6 @@ Abstract: Internet of Video Things (IoVT) brings much higher requirements on the
 
 Please run main_xxx.m files to compare different optimization algorithms.
 
-Running Environment: MATLAB 2021b
+Running Environment: MATLAB 2023a & CVX 3.0
+
+**This manuscript is currently in the review process**
