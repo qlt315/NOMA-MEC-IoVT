@@ -18,7 +18,7 @@ results_real = zeros(1,max_iter);  % Real Tx_rate
 % SIC Decoding
 
 % Priority-based SIC decoding
-S = Omega; 
+S = fliplr(Omega);
 
 
 % Random-based SIC decoding
