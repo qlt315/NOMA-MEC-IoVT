@@ -70,7 +70,7 @@ for j=1:N
 
 
     SINR(1,j) = abs(sum(Channel_coff(:,j).*A(:,j)))^2*P(j) / (SINR_den_sum + Sigma_n);
-    Tx_rate(1,j) = Bandwidth*log2(1+SINR(1,j));
+    Tx_rate(1,j) = Omega(j)*Bandwidth*log2(1+SINR(1,j));
 end
 
 
