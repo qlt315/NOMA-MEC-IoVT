@@ -1,5 +1,5 @@
 # NOMA-MEC-IoVT
-Simulation code of our paper ''Joint Transmission and Resource Optimization in
+Simulation code of our paper in IEEE Transactions on Vehicular Technology ''Joint Transmission and Resource Optimization in
 NOMA-assisted IoVT with Mobile Edge Computing"
 
 Special thanks to FengqianGuo@Tencent for his support of the coding works！
@@ -10,4 +10,4 @@ Please run main_xxx.m files to compare different optimization algorithms.
 
 Running Environment: MATLAB 2023a & CVX 3.0
 
-**This manuscript is currently in the review process**
+This paper is available on https://ieeexplore.ieee.org/document/10430407
