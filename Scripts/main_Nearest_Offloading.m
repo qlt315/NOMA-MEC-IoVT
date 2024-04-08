@@ -53,6 +53,3 @@ for flag_bell=1:10
     end
 end
 
-
-% Figure generation
-

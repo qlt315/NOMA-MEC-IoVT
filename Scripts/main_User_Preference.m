@@ -4,7 +4,7 @@ iteration_num = 0;
 System_init;
 
 % SIC Decoding and Power Allocaton
-P = power_allocation_MM(A);0.86
+P = power_allocation_MM(A);
 
 % SINR and TX rate calculation
 Tx_rate = rate_calculation(A,P);

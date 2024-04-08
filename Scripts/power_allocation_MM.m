@@ -27,13 +27,17 @@ S = fliplr(Omega);
 
 
 % Channel Gain-based SIC decoding
-channel_list = zeros(1,N);
-for j=1:N
-    Ass_BS = ceil(find(A(:,j))/G);
-    Ass_group = find(A(:,j)) - (Ass_BS-1)*G;
-    channel_list(1,j) = abs(Channel_coff((Ass_BS-1)*G+Ass_group,j));
-end
-[~, S] = sort(channel_list, 'descend');
+% channel_list = zeros(1,N);
+% for j=1:N
+%     Ass_BS = ceil(find(A(:,j))/G);
+%     if isempty(Ass_BS)
+%         continue;
+%     else
+%         Ass_group = find(A(:,j)) - (Ass_BS-1)*G;
+%         channel_list(1,j) = abs(Channel_coff((Ass_BS-1)*G+Ass_group,j));
+%     end
+% end
+% [~, S] = sort(channel_list, 'descend');
 
 % Power Allocation Initilization
 rng(315);
