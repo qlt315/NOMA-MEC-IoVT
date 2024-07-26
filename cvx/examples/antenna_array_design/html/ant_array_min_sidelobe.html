@@ -1,0 +1,316 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Minimize sidelobe level of an array with arbitrary 2-D geometry</title>
+<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/antenna_array_design/html/ant_array_min_sidelobe.html">
+<link rel="stylesheet" href="../../examples.css" type="text/css">
+</head>
+<body>
+<div id="header">
+<h1>Minimize sidelobe level of an array with arbitrary 2-D geometry</h1>
+Jump to:&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#source">Source code</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#output">Text output</a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#plots">Plots</a>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../../index.html">Library index</a>
+</div>
+<div id="content">
+<a id="source"></a>
+<pre class="codeinput">
+<span class="comment">% "Convex optimization examples" lecture notes (EE364) by S. Boyd</span>
+<span class="comment">% "Antenna array pattern synthesis via convex optimization"</span>
+<span class="comment">% by H. Lebret and S. Boyd</span>
+<span class="comment">% (figures are generated)</span>
+<span class="comment">%</span>
+<span class="comment">% Designs an antenna array such that:</span>
+<span class="comment">% - it minimizes sidelobe level outside the beamwidth of the pattern</span>
+<span class="comment">% - it has a unit sensitivity at some target direction</span>
+<span class="comment">% - it has nulls (zero sensitivity) at specified direction(s) (optional)</span>
+<span class="comment">%</span>
+<span class="comment">% This is a convex problem (after sampling it can be formulated as an SOCP).</span>
+<span class="comment">%</span>
+<span class="comment">%   minimize   max |y(theta)|     for theta outside the beam</span>
+<span class="comment">%       s.t.   y(theta_tar) = 1</span>
+<span class="comment">%              y(theta_null) = 0  (optional)</span>
+<span class="comment">%</span>
+<span class="comment">% where y is the antenna array gain pattern (complex function) and</span>
+<span class="comment">% variables are w (antenna array weights or shading coefficients).</span>
+<span class="comment">% Gain pattern is a linear function of w: y(theta) = w'*a(theta)</span>
+<span class="comment">% for some a(theta) describing antenna array configuration and specs.</span>
+<span class="comment">%</span>
+<span class="comment">% Written for CVX by Almir Mutapcic 02/02/06</span>
+
+<span class="comment">% select array geometry</span>
+ARRAY_GEOMETRY = <span class="string">'2D_RANDOM'</span>;
+<span class="comment">% ARRAY_GEOMETRY = '1D_UNIFORM_LINE';</span>
+<span class="comment">% ARRAY_GEOMETRY = '2D_UNIFORM_LATTICE';</span>
+
+<span class="comment">% select if the optimal array pattern should enforce nulls or not</span>
+HAS_NULLS = 0; <span class="comment">% HAS_NULLS = 1;</span>
+
+<span class="comment">%********************************************************************</span>
+<span class="comment">% problem specs</span>
+<span class="comment">%********************************************************************</span>
+lambda = 1;           <span class="comment">% wavelength</span>
+theta_tar = 60;       <span class="comment">% target direction (should be an integer -- discretization)</span>
+half_beamwidth = 10;  <span class="comment">% half beamwidth around the target direction</span>
+
+<span class="comment">% angles where we want nulls (optional)</span>
+<span class="keyword">if</span> HAS_NULLS
+  theta_nulls = [95 110 120 140 225];
+<span class="keyword">end</span>
+
+<span class="comment">%********************************************************************</span>
+<span class="comment">% random array of n antenna elements</span>
+<span class="comment">%********************************************************************</span>
+<span class="keyword">if</span> strcmp( ARRAY_GEOMETRY, <span class="string">'2D_RANDOM'</span> )
+  <span class="comment">% set random seed to repeat experiments</span>
+  rand(<span class="string">'state'</span>,0);
+
+  <span class="comment">% (uniformly distributed on [0,L]-by-[0,L] square)</span>
+  n = 40;
+  L = 5;
+  loc = L*rand(n,2);
+  angleRange = 360;
+
+<span class="comment">%********************************************************************</span>
+<span class="comment">% uniform 1D array with n elements with inter-element spacing d</span>
+<span class="comment">%********************************************************************</span>
+<span class="keyword">elseif</span> strcmp( ARRAY_GEOMETRY, <span class="string">'1D_UNIFORM_LINE'</span> )
+  <span class="comment">% (unifrom array on a line)</span>
+  n = 30;
+  d = 0.45*lambda;
+  loc = [d*[0:n-1]' zeros(n,1)];
+  angleRange = 180;
+
+<span class="comment">%********************************************************************</span>
+<span class="comment">% uniform 2D array with m-by-m element with d spacing</span>
+<span class="comment">%********************************************************************</span>
+<span class="keyword">elseif</span> strcmp( ARRAY_GEOMETRY, <span class="string">'2D_UNIFORM_LATTICE'</span> )
+  m = 6; n = m^2;
+  d = 0.45*lambda;
+
+  loc = zeros(n,2);
+  <span class="keyword">for</span> x = 0:m-1
+    <span class="keyword">for</span> y = 0:m-1
+      loc(m*y+x+1,:) = [x y];
+    <span class="keyword">end</span>
+  <span class="keyword">end</span>
+  loc = loc*d;
+  angleRange = 360;
+
+<span class="keyword">else</span>
+  error(<span class="string">'Undefined array geometry'</span>)
+<span class="keyword">end</span>
+
+<span class="comment">%********************************************************************</span>
+<span class="comment">% construct optimization data</span>
+<span class="comment">%********************************************************************</span>
+<span class="comment">% build matrix A that relates w and y(theta), ie, y = A*w</span>
+theta = [1:angleRange]';
+A = kron(cos(pi*theta/180), loc(:,1)') + kron(sin(pi*theta/180), loc(:,2)');
+A = exp(2*pi*i/lambda*A);
+
+<span class="comment">% target constraint matrix</span>
+[diff_closest, ind_closest] = min( abs(theta - theta_tar) );
+Atar = A(ind_closest,:);
+
+<span class="comment">% nulls constraint matrix</span>
+<span class="keyword">if</span> HAS_NULLS
+  Anull = []; ind_nulls = [];
+  <span class="keyword">for</span> k = 1:length(theta_nulls)
+    [diff_closest, ind_closest] = min( abs(theta - theta_nulls(k)) );
+    Anull = [Anull; A(ind_closest,:)];
+    ind_nulls = [ind_nulls ind_closest];
+  <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="comment">% stopband constraint matrix</span>
+ind = find(theta &lt;= (theta_tar-half_beamwidth) | <span class="keyword">...</span>
+           theta &gt;= (theta_tar+half_beamwidth) );
+<span class="keyword">if</span> HAS_NULLS, ind = setdiff(ind,ind_nulls); <span class="keyword">end</span>;
+As = A(ind,:);
+
+<span class="comment">%********************************************************************</span>
+<span class="comment">% optimization problem</span>
+<span class="comment">%********************************************************************</span>
+cvx_begin
+  variable <span class="string">w(n)</span> <span class="string">complex</span>
+  minimize( max( abs(As*w) ) )
+  subject <span class="string">to</span>
+    Atar*w == 1;   <span class="comment">% target constraint</span>
+    <span class="keyword">if</span> HAS_NULLS   <span class="comment">% nulls constraints</span>
+      Anull*w == 0;
+    <span class="keyword">end</span>
+cvx_end
+
+<span class="comment">% check if problem was successfully solved</span>
+disp([<span class="string">'Problem is '</span> cvx_status])
+<span class="keyword">if</span> ~strfind(cvx_status,<span class="string">'Solved'</span>)
+  <span class="keyword">return</span>
+<span class="keyword">end</span>
+
+min_sidelobe_level = 20*log10( max(abs(As*w)) );
+fprintf(1,<span class="string">'The minimum sidelobe level is %3.2f dB.\n\n'</span>,<span class="keyword">...</span>
+          min_sidelobe_level );
+
+<span class="comment">%********************************************************************</span>
+<span class="comment">% plots</span>
+<span class="comment">%********************************************************************</span>
+figure(1), clf
+plot(loc(:,1),loc(:,2),<span class="string">'o'</span>)
+title(<span class="string">'Antenna locations'</span>)
+
+<span class="comment">% plot array pattern</span>
+<span class="keyword">if</span> angleRange == 180,
+    theta = [1:360]';
+    A = [ A; -A ];
+<span class="keyword">end</span>
+y = A*w;
+figure(2), clf
+ymin = floor(0.1*min_sidelobe_level)*10-10; ymax = 0;
+plot([1:360], 20*log10(abs(y)), <span class="keyword">...</span>
+     [theta_tar theta_tar],[ymin ymax],<span class="string">'r--'</span>,<span class="keyword">...</span>
+     [theta_tar+half_beamwidth theta_tar+half_beamwidth],[ymin ymax],<span class="string">'g--'</span>,<span class="keyword">...</span>
+     [theta_tar-half_beamwidth theta_tar-half_beamwidth],[ymin ymax],<span class="string">'g--'</span>);
+<span class="keyword">if</span> HAS_NULLS <span class="comment">% add lines that represent null positions</span>
+  hold <span class="string">on</span>;
+  <span class="keyword">for</span> k = 1:length(theta_nulls)
+    plot([theta_nulls(k) theta_nulls(k)],[ymin ymax],<span class="string">'m--'</span>);
+  <span class="keyword">end</span>
+  hold <span class="string">off</span>;
+<span class="keyword">end</span>
+xlabel(<span class="string">'look angle'</span>), ylabel(<span class="string">'mag y(theta) in dB'</span>);
+axis([0 360 ymin ymax]);
+
+<span class="comment">% polar plot</span>
+figure(3), clf
+zerodB = -ymin;
+dBY = 20*log10(abs(y)) + zerodB;
+ind = find( dBY &lt;= 0 ); dBY(ind) = 0;
+plot(dBY.*cos(pi*theta/180), dBY.*sin(pi*theta/180), <span class="string">'-'</span>);
+axis([-zerodB zerodB -zerodB zerodB]), axis(<span class="string">'off'</span>), axis(<span class="string">'square'</span>)
+hold <span class="string">on</span>
+plot(zerodB*cos(pi*theta/180),zerodB*sin(pi*theta/180),<span class="string">'k:'</span>) <span class="comment">% 0 dB</span>
+plot( (min_sidelobe_level + zerodB)*cos(pi*theta/180), <span class="keyword">...</span>
+      (min_sidelobe_level + zerodB)*sin(pi*theta/180),<span class="string">'k:'</span>)  <span class="comment">% min level</span>
+text(-zerodB,0,<span class="string">'0 dB'</span>)
+tt = text(-(min_sidelobe_level + zerodB),0,sprintf(<span class="string">'%0.1f dB'</span>,min_sidelobe_level));
+set(tt,<span class="string">'HorizontalAlignment'</span>,<span class="string">'right'</span>);
+theta_1 = theta_tar+half_beamwidth;
+theta_2 = theta_tar-half_beamwidth;
+plot([0 55*cos(theta_tar*pi/180)], [0 55*sin(theta_tar*pi/180)], <span class="string">'k:'</span>)
+plot([0 55*cos(theta_1*pi/180)], [0 55*sin(theta_1*pi/180)], <span class="string">'k:'</span>)
+plot([0 55*cos(theta_2*pi/180)], [0 55*sin(theta_2*pi/180)], <span class="string">'k:'</span>)
+<span class="keyword">if</span> HAS_NULLS <span class="comment">% add lines that represent null positions</span>
+  <span class="keyword">for</span> k = 1:length(theta_nulls)
+    plot([0 55*cos(theta_nulls(k)*pi/180)], <span class="keyword">...</span>
+         [0 55*sin(theta_nulls(k)*pi/180)], <span class="string">'k:'</span>)
+  <span class="keyword">end</span>
+<span class="keyword">end</span>
+hold <span class="string">off</span>
+</pre>
+<a id="output"></a>
+<pre class="codeoutput">
+ 
+Calling Mosek 9.1.9: 1366 variables, 422 equality constraints
+   For improved efficiency, Mosek is solving the dual problem.
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 422             
+  Cones                  : 341             
+  Scalar variables       : 1366            
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.01    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 422             
+  Cones                  : 341             
+  Scalar variables       : 1366            
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 81
+Optimizer  - Cones                  : 342
+Optimizer  - Scalar variables       : 1026              conic                  : 1026            
+Optimizer  - Semi-definite variables: 0                 scalarized             : 0               
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 3321              after factor           : 3321            
+Factor     - dense dim.             : 0                 flops                  : 6.89e+06        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   3.4e+02  1.0e+00  1.0e+00  0.00e+00   0.000000000e+00   0.000000000e+00   1.0e+00  0.02  
+1   9.8e+01  2.9e-01  2.8e-02  2.52e+00   -8.590871054e-02  -1.318838913e-01  2.9e-01  0.03  
+2   2.0e+01  5.9e-02  3.9e-03  3.45e+00   -8.069498732e-02  -8.185728925e-02  5.9e-02  0.03  
+3   1.3e+01  3.7e-02  1.8e-03  1.32e+00   -7.700437407e-02  -7.788164242e-02  3.7e-02  0.03  
+4   2.0e+00  5.9e-03  4.5e-05  1.21e+00   -7.194808655e-02  -7.235294175e-02  5.9e-03  0.04  
+5   1.4e+00  4.1e-03  2.6e-05  1.06e+00   -7.125511919e-02  -7.153752769e-02  4.1e-03  0.04  
+6   5.9e-01  1.7e-03  6.5e-06  1.05e+00   -7.056788870e-02  -7.068638056e-02  1.7e-03  0.04  
+7   4.3e-02  1.3e-04  1.0e-07  1.02e+00   -7.030107264e-02  -7.031009430e-02  1.3e-04  0.05  
+8   1.9e-02  5.6e-05  3.1e-08  1.00e+00   -7.030410140e-02  -7.030807760e-02  5.6e-05  0.05  
+9   5.2e-04  1.5e-06  1.3e-10  1.00e+00   -7.030216638e-02  -7.030227439e-02  1.5e-06  0.05  
+10  6.5e-05  1.9e-07  6.3e-12  9.96e-01   -7.030209110e-02  -7.030210461e-02  1.9e-07  0.05  
+11  9.2e-06  2.7e-08  3.4e-13  9.99e-01   -7.030208990e-02  -7.030209179e-02  2.7e-08  0.06  
+12  2.3e-07  6.6e-10  1.3e-15  1.00e+00   -7.030209005e-02  -7.030209009e-02  6.6e-10  0.06  
+Optimizer terminated. Time: 0.06    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: -7.0302090046e-02   nrm: 1e+00    Viol.  con: 2e-08    var: 0e+00    cones: 0e+00  
+  Dual.    obj: -7.0302090092e-02   nrm: 7e+01    Viol.  con: 0e+00    var: 6e-13    cones: 0e+00  
+Optimizer summary
+  Optimizer                 -                        time: 0.06    
+    Interior-point          - iterations : 12        time: 0.06    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): +0.0703021
+ 
+Problem is Solved
+The minimum sidelobe level is -23.06 dB.
+
+</pre>
+<a id="plots"></a>
+<div id="plotoutput">
+<img src="ant_array_min_sidelobe__01.png" alt=""> <img src="ant_array_min_sidelobe__02.png" alt=""> <img src="ant_array_min_sidelobe__03.png" alt=""> 
+</div>
+</div>
+</body>
+</html>

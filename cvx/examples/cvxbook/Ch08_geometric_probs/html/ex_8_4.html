@@ -1,0 +1,251 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Example 8.4: One free point localization</title>
+<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/cvxbook/Ch08_geometric_probs/html/ex_8_4.html">
+<link rel="stylesheet" href="../../../examples.css" type="text/css">
+</head>
+<body>
+<div id="header">
+<h1>Example 8.4: One free point localization</h1>
+Jump to:&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#source">Source code</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#output">Text output</a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+Plots
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../../../index.html">Library index</a>
+</div>
+<div id="content">
+<a id="source"></a>
+<pre class="codeinput">
+<span class="comment">% Section 8.7.1, Boyd &amp; Vandenberghe "Convex Optimization"</span>
+<span class="comment">% Joelle Skaf - 10/23/05</span>
+<span class="comment">%</span>
+<span class="comment">% K fixed points (u1,v1),..., (uK,vK) in R^2 are given and the goal is to place</span>
+<span class="comment">% one additional point (u,v) such that:</span>
+<span class="comment">% 1) the L1-norm is minimized, i.e.</span>
+<span class="comment">%           minimize    sum_{i=1}^K ( |u - u_i| + |v - v_i| )</span>
+<span class="comment">%    the solution in this case is any median of the fixed points</span>
+<span class="comment">% 2) the L2-norm is minimized, i.e.</span>
+<span class="comment">%           minimize    sum_{i=1}^K ( |u - u_i|^2 + |v - v_i|^2 )^.5</span>
+<span class="comment">%    the solution in this case is the Weber point of the fixed points</span>
+
+<span class="comment">% Data generation</span>
+n = 2;
+K = 11;
+randn(<span class="string">'state'</span>,0);
+P = randn(n,K);
+
+<span class="comment">% L1 - norm</span>
+fprintf(1,<span class="string">'Minimizing the L1-norm of the sum of the distances to fixed points...'</span>);
+
+cvx_begin
+    variable <span class="string">x1(2)</span>
+    minimize ( sum(norms(x1*ones(1,K) - P,1)) )
+cvx_end
+
+fprintf(1,<span class="string">'Done! \n'</span>);
+
+<span class="comment">% L2 - norm</span>
+fprintf(1,<span class="string">'Minimizing the L2-norm of the sum of the distances to fixed points...'</span>);
+
+cvx_begin
+    variable <span class="string">x2(2)</span>
+    minimize ( sum(norms(x2*ones(1,K) - P,2)) )
+cvx_end
+
+fprintf(1,<span class="string">'Done! \n'</span>);
+
+<span class="comment">% Displaying results</span>
+disp(<span class="string">'------------------------------------------------------------------'</span>);
+disp(<span class="string">'The optimal point location for the L1-norm case is: '</span>);
+disp(x1);
+disp(<span class="string">'The optimal point location for the L2-norm case is: '</span>);
+disp(x2);
+</pre>
+<a id="output"></a>
+<pre class="codeoutput">
+Minimizing the L1-norm of the sum of the distances to fixed points... 
+Calling Mosek 9.1.9: 44 variables, 20 equality constraints
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 20              
+  Cones                  : 22              
+  Scalar variables       : 44              
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 20              
+  Cones                  : 22              
+  Scalar variables       : 44              
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the dual        
+Optimizer  - Constraints            : 2
+Optimizer  - Cones                  : 0
+Optimizer  - Scalar variables       : 22                conic                  : 0               
+Optimizer  - Semi-definite variables: 0                 scalarized             : 0               
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 2                 after factor           : 2               
+Factor     - dense dim.             : 0                 flops                  : 4.60e+01        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   3.8e+00  0.0e+00  1.0e+00  0.00e+00   0.000000000e+00   0.000000000e+00   1.0e+00  0.00  
+1   1.7e+00  1.8e-15  3.4e-01  6.87e-01   7.391774363e+00   7.464633694e+00   4.4e-01  0.01  
+2   2.8e-01  4.4e-16  2.5e-02  8.41e-01   1.198361653e+01   1.200857301e+01   7.3e-02  0.01  
+3   4.8e-02  5.6e-16  1.8e-03  9.47e-01   1.350850611e+01   1.351330498e+01   1.2e-02  0.01  
+4   1.3e-02  6.7e-16  2.4e-04  9.89e-01   1.376190729e+01   1.376316386e+01   3.2e-03  0.01  
+5   1.2e-03  3.3e-16  7.1e-06  9.97e-01   1.385853821e+01   1.385865862e+01   3.1e-04  0.01  
+6   8.2e-07  6.7e-16  1.3e-10  1.00e+00   1.386809357e+01   1.386809366e+01   2.1e-07  0.01  
+7   3.2e-12  2.2e-16  5.1e-16  1.00e+00   1.386809997e+01   1.386809997e+01   8.4e-13  0.01  
+Optimizer terminated. Time: 0.01    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: 1.3868099974e+01    nrm: 4e+00    Viol.  con: 1e-16    var: 0e+00    cones: 3e-12  
+  Dual.    obj: 1.3868099974e+01    nrm: 1e+00    Viol.  con: 0e+00    var: 0e+00    cones: 0e+00  
+Optimizer summary
+  Optimizer                 -                        time: 0.01    
+    Interior-point          - iterations : 7         time: 0.01    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): +13.8681
+ 
+Done! 
+Minimizing the L2-norm of the sum of the distances to fixed points... 
+Calling Mosek 9.1.9: 33 variables, 13 equality constraints
+   For improved efficiency, Mosek is solving the dual problem.
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 13              
+  Cones                  : 11              
+  Scalar variables       : 33              
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 13              
+  Cones                  : 11              
+  Scalar variables       : 33              
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 2
+Optimizer  - Cones                  : 11
+Optimizer  - Scalar variables       : 33                conic                  : 33              
+Optimizer  - Semi-definite variables: 0                 scalarized             : 0               
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 3                 after factor           : 3               
+Factor     - dense dim.             : 0                 flops                  : 1.15e+02        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   0.0e+00  2.0e+00  1.2e+01  0.00e+00   0.000000000e+00   -1.100000000e+01  1.0e+00  0.00  
+1   5.6e-16  6.2e-01  3.4e+00  -1.63e-01  -6.996197543e+00  -1.223100824e+01  3.2e-01  0.01  
+2   4.4e-16  1.1e-01  2.9e-01  6.18e-01   -1.036223969e+01  -1.142407568e+01  5.6e-02  0.01  
+3   5.6e-16  1.6e-02  1.6e-02  9.08e-01   -1.132123240e+01  -1.147908569e+01  8.0e-03  0.01  
+4   8.9e-16  9.9e-04  2.6e-04  9.86e-01   -1.147326822e+01  -1.148335935e+01  5.1e-04  0.01  
+5   1.4e-14  2.2e-05  8.5e-07  9.99e-01   -1.148368982e+01  -1.148391076e+01  1.1e-05  0.01  
+6   8.4e-14  8.1e-07  6.1e-09  1.00e+00   -1.148391996e+01  -1.148392822e+01  4.2e-07  0.01  
+7   5.4e-13  3.7e-08  6.0e-11  1.00e+00   -1.148392883e+01  -1.148392920e+01  1.9e-08  0.01  
+8   2.2e-12  5.0e-09  3.0e-12  1.00e+00   -1.148392919e+01  -1.148392924e+01  2.6e-09  0.01  
+Optimizer terminated. Time: 0.01    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: -1.1483929194e+01   nrm: 1e+00    Viol.  con: 4e-12    var: 0e+00    cones: 0e+00  
+  Dual.    obj: -1.1483929245e+01   nrm: 2e+00    Viol.  con: 0e+00    var: 1e-08    cones: 0e+00  
+Optimizer summary
+  Optimizer                 -                        time: 0.01    
+    Interior-point          - iterations : 8         time: 0.01    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): +11.4839
+ 
+Done! 
+------------------------------------------------------------------
+The optimal point location for the L1-norm case is: 
+   -0.0956
+    0.1139
+
+The optimal point location for the L2-norm case is: 
+    0.1252
+    0.1716
+
+</pre>
+</div>
+</body>
+</html>

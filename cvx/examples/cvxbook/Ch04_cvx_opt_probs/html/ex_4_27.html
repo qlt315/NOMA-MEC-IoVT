@@ -1,0 +1,465 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Exercise 4.27: Matrix fractional minimization using second-order cone programming</title>
+<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/cvxbook/Ch04_cvx_opt_probs/html/ex_4_27.html">
+<link rel="stylesheet" href="../../../examples.css" type="text/css">
+</head>
+<body>
+<div id="header">
+<h1>Exercise 4.27: Matrix fractional minimization using second-order cone programming</h1>
+Jump to:&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#source">Source code</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#output">Text output</a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+Plots
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../../../index.html">Library index</a>
+</div>
+<div id="content">
+<a id="source"></a>
+<pre class="codeinput">
+<span class="comment">% From Boyd &amp; Vandenberghe, "Convex Optimization"</span>
+<span class="comment">% Jo&euml;lle Skaf - 09/26/05</span>
+<span class="comment">%</span>
+<span class="comment">% Shows the equivalence of the following formulations:</span>
+<span class="comment">% 1)        minimize    (Ax + b)'*inv(I + B*diag(x)*B')*(Ax + b)</span>
+<span class="comment">%               s.t.    x &gt;= 0</span>
+<span class="comment">% 2)        minimize    (Ax + b)'*inv(I + B*Y*B')*(Ax + b)</span>
+<span class="comment">%               s.t.    x &gt;= 0</span>
+<span class="comment">%                       Y = diag(x)</span>
+<span class="comment">% 3)        minimize    v'*v + w'*inv(diag(x))*w</span>
+<span class="comment">%               s.t.    v + Bw = Ax + b</span>
+<span class="comment">%                       x &gt;= 0</span>
+<span class="comment">% 4)        minimize    v'*v + w'*inv(Y)*w</span>
+<span class="comment">%               s.t.    Y = diag(x)</span>
+<span class="comment">%                       v + Bw = Ax + b</span>
+<span class="comment">%                       x &gt;= 0</span>
+
+<span class="comment">% Generate input data</span>
+randn(<span class="string">'state'</span>,0);
+m = 16; n = 8;
+A = randn(m,n);
+b = randn(m,1);
+B = randn(m,n);
+
+<span class="comment">% Problem 1: original formulation</span>
+disp(<span class="string">'Computing optimal solution for 1st formulation...'</span>);
+cvx_begin
+    variable <span class="string">x1(n)</span>
+    minimize( matrix_frac(A*x1 + b , eye(m) + B*diag(x1)*B') )
+    x1 &gt;= 0;
+cvx_end
+opt1 = cvx_optval;
+
+<span class="comment">% Problem 2: original formulation (modified)</span>
+disp(<span class="string">'Computing optimal solution for 2nd formulation...'</span>);
+cvx_begin
+    variable <span class="string">x2(n)</span>
+    variable <span class="string">Y(n,n)</span> <span class="string">diagonal</span>
+    minimize( matrix_frac(A*x2 + b , eye(m) + B*Y*B') )
+    x2 &gt;= 0;
+    Y == diag(x2);
+cvx_end
+opt2 = cvx_optval;
+
+<span class="comment">% Problem 3: equivalent formulation (as given in the book)</span>
+disp(<span class="string">'Computing optimal solution for 3rd formulation...'</span>);
+cvx_begin
+    variables <span class="string">x3(n)</span> <span class="string">w(n)</span> <span class="string">v(m)</span>
+    minimize( square_pos(norm(v)) + matrix_frac(w, diag(x3)) )
+    v + B*w == A*x3 + b;
+    x3 &gt;= 0;
+cvx_end
+opt3 = cvx_optval;
+
+<span class="comment">% Problem 4: equivalent formulation (modified)</span>
+disp(<span class="string">'Computing optimal solution for 4th formulation...'</span>);
+cvx_begin
+    variables <span class="string">x4(n)</span> <span class="string">w(n)</span> <span class="string">v(m)</span>
+    variable <span class="string">Y(n,n)</span> <span class="string">diagonal</span>
+    minimize( square_pos(norm(v)) + matrix_frac(w, Y) )
+    v + B*w == A*x4 + b;
+    x4 &gt;= 0;
+    Y == diag(x4);
+cvx_end
+opt4 = cvx_optval;
+
+<span class="comment">% Display the results</span>
+disp(<span class="string">'------------------------------------------------------------------------'</span>);
+disp(<span class="string">'The optimal value for each of the 4 formulations is: '</span>);
+[opt1 opt2 opt3 opt4]
+disp(<span class="string">'They should be equal!'</span>)
+</pre>
+<a id="output"></a>
+<pre class="codeoutput">
+Computing optimal solution for 1st formulation...
+ 
+Calling Mosek 9.1.9: 161 variables, 9 equality constraints
+   For improved efficiency, Mosek is solving the dual problem.
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 9               
+  Cones                  : 0               
+  Scalar variables       : 8               
+  Matrix variables       : 1               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 9               
+  Cones                  : 0               
+  Scalar variables       : 8               
+  Matrix variables       : 1               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 9
+Optimizer  - Cones                  : 0
+Optimizer  - Scalar variables       : 8                 conic                  : 0               
+Optimizer  - Semi-definite variables: 1                 scalarized             : 153             
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 45                after factor           : 45              
+Factor     - dense dim.             : 0                 flops                  : 1.30e+05        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   3.2e+00  1.5e+00  1.7e+01  0.00e+00   1.600000000e+01   0.000000000e+00   1.0e+00  0.00  
+1   1.2e+00  5.7e-01  6.2e+00  -4.24e-01  7.649863591e+00   -1.542167882e+00  3.8e-01  0.01  
+2   2.3e-01  1.1e-01  7.0e-01  2.18e-01   -2.300302040e+00  -4.583674374e+00  7.2e-02  0.01  
+3   5.7e-02  2.6e-02  8.3e-02  8.76e-01   -4.480917682e+00  -5.062699002e+00  1.8e-02  0.01  
+4   1.2e-02  5.8e-03  8.8e-03  9.86e-01   -5.012517306e+00  -5.140475506e+00  3.9e-03  0.01  
+5   2.3e-03  1.1e-03  6.9e-04  9.95e-01   -5.152382580e+00  -5.175711510e+00  7.1e-04  0.01  
+6   3.8e-04  1.8e-04  4.7e-05  1.00e+00   -5.177624366e+00  -5.181529646e+00  1.2e-04  0.01  
+7   4.8e-05  2.2e-05  2.1e-06  1.00e+00   -5.181888732e+00  -5.182374649e+00  1.5e-05  0.01  
+8   6.5e-06  3.0e-06  1.0e-07  1.00e+00   -5.182398705e+00  -5.182464619e+00  2.0e-06  0.01  
+9   9.0e-07  4.2e-07  5.4e-09  1.00e+00   -5.182466096e+00  -5.182475300e+00  2.8e-07  0.01  
+10  1.8e-07  8.2e-08  4.7e-10  1.00e+00   -5.182475076e+00  -5.182476893e+00  5.5e-08  0.01  
+11  2.2e-08  1.0e-08  2.0e-11  1.00e+00   -5.182477143e+00  -5.182477365e+00  6.8e-09  0.01  
+12  1.1e-09  2.2e-09  2.3e-13  1.00e+00   -5.182477403e+00  -5.182477414e+00  3.4e-10  0.01  
+Optimizer terminated. Time: 0.02    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: -5.1824774029e+00   nrm: 4e+00    Viol.  con: 1e-08    var: 2e-09    barvar: 0e+00  
+  Dual.    obj: -5.1824774141e+00   nrm: 5e+00    Viol.  con: 0e+00    var: 6e-17    barvar: 5e-09  
+Optimizer summary
+  Optimizer                 -                        time: 0.02    
+    Interior-point          - iterations : 12        time: 0.02    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): +5.18248
+ 
+Computing optimal solution for 2nd formulation...
+ 
+Calling Mosek 9.1.9: 161 variables, 9 equality constraints
+   For improved efficiency, Mosek is solving the dual problem.
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 9               
+  Cones                  : 0               
+  Scalar variables       : 8               
+  Matrix variables       : 1               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 9               
+  Cones                  : 0               
+  Scalar variables       : 8               
+  Matrix variables       : 1               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 9
+Optimizer  - Cones                  : 0
+Optimizer  - Scalar variables       : 8                 conic                  : 0               
+Optimizer  - Semi-definite variables: 1                 scalarized             : 153             
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 45                after factor           : 45              
+Factor     - dense dim.             : 0                 flops                  : 1.30e+05        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   3.2e+00  1.5e+00  1.7e+01  0.00e+00   1.600000000e+01   0.000000000e+00   1.0e+00  0.00  
+1   1.2e+00  5.7e-01  6.2e+00  -4.24e-01  7.649863591e+00   -1.542167882e+00  3.8e-01  0.01  
+2   2.3e-01  1.1e-01  7.0e-01  2.18e-01   -2.300302040e+00  -4.583674374e+00  7.2e-02  0.01  
+3   5.7e-02  2.6e-02  8.3e-02  8.76e-01   -4.480917682e+00  -5.062699002e+00  1.8e-02  0.01  
+4   1.2e-02  5.8e-03  8.8e-03  9.86e-01   -5.012517306e+00  -5.140475506e+00  3.9e-03  0.01  
+5   2.3e-03  1.1e-03  6.9e-04  9.95e-01   -5.152382580e+00  -5.175711510e+00  7.1e-04  0.01  
+6   3.8e-04  1.8e-04  4.7e-05  1.00e+00   -5.177624366e+00  -5.181529646e+00  1.2e-04  0.01  
+7   4.8e-05  2.2e-05  2.1e-06  1.00e+00   -5.181888732e+00  -5.182374649e+00  1.5e-05  0.01  
+8   6.5e-06  3.0e-06  1.0e-07  1.00e+00   -5.182398705e+00  -5.182464619e+00  2.0e-06  0.01  
+9   9.0e-07  4.2e-07  5.4e-09  1.00e+00   -5.182466096e+00  -5.182475300e+00  2.8e-07  0.01  
+10  1.8e-07  8.2e-08  4.7e-10  1.00e+00   -5.182475076e+00  -5.182476893e+00  5.5e-08  0.01  
+11  2.2e-08  1.0e-08  2.0e-11  1.00e+00   -5.182477143e+00  -5.182477365e+00  6.8e-09  0.01  
+12  1.1e-09  2.2e-09  2.3e-13  1.00e+00   -5.182477403e+00  -5.182477414e+00  3.4e-10  0.01  
+Optimizer terminated. Time: 0.02    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: -5.1824774029e+00   nrm: 4e+00    Viol.  con: 1e-08    var: 2e-09    barvar: 0e+00  
+  Dual.    obj: -5.1824774141e+00   nrm: 5e+00    Viol.  con: 0e+00    var: 6e-17    barvar: 5e-09  
+Optimizer summary
+  Optimizer                 -                        time: 0.02    
+    Interior-point          - iterations : 12        time: 0.02    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): +5.18248
+ 
+Computing optimal solution for 3rd formulation...
+ 
+Calling Mosek 9.1.9: 75 variables, 21 equality constraints
+   For improved efficiency, Mosek is solving the dual problem.
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 21              
+  Cones                  : 2               
+  Scalar variables       : 30              
+  Matrix variables       : 1               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 21              
+  Cones                  : 2               
+  Scalar variables       : 30              
+  Matrix variables       : 1               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 18
+Optimizer  - Cones                  : 2
+Optimizer  - Scalar variables       : 28                conic                  : 20              
+Optimizer  - Semi-definite variables: 1                 scalarized             : 45              
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 170               after factor           : 171             
+Factor     - dense dim.             : 0                 flops                  : 8.06e+03        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   1.0e+00  1.5e+00  2.5e+00  0.00e+00   1.000000000e+00   -5.000000000e-01  1.0e+00  0.00  
+1   6.0e-01  8.9e-01  1.6e+00  -1.96e-01  -5.276175094e-02  -1.064801797e+00  6.0e-01  0.01  
+2   2.5e-01  3.8e-01  4.5e-01  1.81e-01   -2.329745361e+00  -2.870650967e+00  2.5e-01  0.01  
+3   6.9e-02  1.0e-01  5.6e-02  1.04e+00   -4.212744966e+00  -4.365656544e+00  6.9e-02  0.01  
+4   2.0e-02  2.9e-02  1.0e-02  9.71e-01   -4.904729102e+00  -4.940441047e+00  2.0e-02  0.01  
+5   4.1e-03  6.1e-03  9.6e-04  1.04e+00   -5.109227672e+00  -5.116281995e+00  4.1e-03  0.01  
+6   9.0e-04  1.3e-03  1.1e-04  9.78e-01   -5.166865126e+00  -5.168291280e+00  9.0e-04  0.01  
+7   1.7e-04  2.5e-04  8.6e-06  9.92e-01   -5.179879191e+00  -5.180143692e+00  1.7e-04  0.01  
+8   5.1e-06  7.5e-06  4.5e-08  9.98e-01   -5.182392173e+00  -5.182399521e+00  5.1e-06  0.01  
+9   6.5e-07  9.7e-07  2.1e-09  1.00e+00   -5.182466336e+00  -5.182467280e+00  6.5e-07  0.01  
+10  7.8e-08  1.2e-07  8.7e-11  1.00e+00   -5.182476075e+00  -5.182476188e+00  7.8e-08  0.01  
+11  4.1e-09  6.1e-09  1.1e-12  1.00e+00   -5.182477344e+00  -5.182477350e+00  4.1e-09  0.01  
+Optimizer terminated. Time: 0.02    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: -5.1824773440e+00   nrm: 4e+00    Viol.  con: 7e-09    var: 0e+00    barvar: 0e+00    cones: 0e+00  
+  Dual.    obj: -5.1824773501e+00   nrm: 6e+00    Viol.  con: 0e+00    var: 1e-08    barvar: 7e-09    cones: 0e+00  
+Optimizer summary
+  Optimizer                 -                        time: 0.02    
+    Interior-point          - iterations : 11        time: 0.01    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): +5.18248
+ 
+Computing optimal solution for 4th formulation...
+ 
+Calling Mosek 9.1.9: 75 variables, 21 equality constraints
+   For improved efficiency, Mosek is solving the dual problem.
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 21              
+  Cones                  : 2               
+  Scalar variables       : 30              
+  Matrix variables       : 1               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 21              
+  Cones                  : 2               
+  Scalar variables       : 30              
+  Matrix variables       : 1               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 18
+Optimizer  - Cones                  : 2
+Optimizer  - Scalar variables       : 28                conic                  : 20              
+Optimizer  - Semi-definite variables: 1                 scalarized             : 45              
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 170               after factor           : 171             
+Factor     - dense dim.             : 0                 flops                  : 8.06e+03        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   1.0e+00  1.5e+00  2.5e+00  0.00e+00   1.000000000e+00   -5.000000000e-01  1.0e+00  0.00  
+1   6.0e-01  8.9e-01  1.6e+00  -1.96e-01  -5.276175094e-02  -1.064801797e+00  6.0e-01  0.01  
+2   2.5e-01  3.8e-01  4.5e-01  1.81e-01   -2.329745361e+00  -2.870650967e+00  2.5e-01  0.01  
+3   6.9e-02  1.0e-01  5.6e-02  1.04e+00   -4.212744966e+00  -4.365656544e+00  6.9e-02  0.01  
+4   2.0e-02  2.9e-02  1.0e-02  9.71e-01   -4.904729102e+00  -4.940441047e+00  2.0e-02  0.01  
+5   4.1e-03  6.1e-03  9.6e-04  1.04e+00   -5.109227672e+00  -5.116281995e+00  4.1e-03  0.01  
+6   9.0e-04  1.3e-03  1.1e-04  9.78e-01   -5.166865126e+00  -5.168291280e+00  9.0e-04  0.01  
+7   1.7e-04  2.5e-04  8.6e-06  9.92e-01   -5.179879191e+00  -5.180143692e+00  1.7e-04  0.01  
+8   5.1e-06  7.5e-06  4.5e-08  9.98e-01   -5.182392173e+00  -5.182399521e+00  5.1e-06  0.01  
+9   6.5e-07  9.7e-07  2.1e-09  1.00e+00   -5.182466336e+00  -5.182467280e+00  6.5e-07  0.01  
+10  7.8e-08  1.2e-07  8.7e-11  1.00e+00   -5.182476075e+00  -5.182476188e+00  7.8e-08  0.01  
+11  4.1e-09  6.1e-09  1.1e-12  1.00e+00   -5.182477344e+00  -5.182477350e+00  4.1e-09  0.01  
+Optimizer terminated. Time: 0.02    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: -5.1824773440e+00   nrm: 4e+00    Viol.  con: 7e-09    var: 0e+00    barvar: 0e+00    cones: 0e+00  
+  Dual.    obj: -5.1824773502e+00   nrm: 6e+00    Viol.  con: 0e+00    var: 1e-08    barvar: 7e-09    cones: 0e+00  
+Optimizer summary
+  Optimizer                 -                        time: 0.02    
+    Interior-point          - iterations : 11        time: 0.01    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): +5.18248
+ 
+------------------------------------------------------------------------
+The optimal value for each of the 4 formulations is: 
+
+ans =
+
+    5.1825    5.1825    5.1825    5.1825
+
+They should be equal!
+</pre>
+</div>
+</body>
+</html>

@@ -1,0 +1,274 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Minimize sidelobe level of a uniform linear array via spectral factorization</title>
+<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/antenna_array_design/html/line_array_spec_fact.html">
+<link rel="stylesheet" href="../../examples.css" type="text/css">
+</head>
+<body>
+<div id="header">
+<h1>Minimize sidelobe level of a uniform linear array via spectral factorization</h1>
+Jump to:&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#source">Source code</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#output">Text output</a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#plots">Plots</a>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../../index.html">Library index</a>
+</div>
+<div id="content">
+<a id="source"></a>
+<pre class="codeinput">
+<span class="comment">% "FIR Filter Design via Spectral Factorization and Convex Optimization" example</span>
+<span class="comment">% by S.-P. Wu, S. Boyd, and L. Vandenberghe</span>
+<span class="comment">% (figures are generated)</span>
+<span class="comment">%</span>
+<span class="comment">% Designs a uniform linear antenna array using spectral factorization method where:</span>
+<span class="comment">% - it minimizes sidelobe level outside the beamwidth of the pattern</span>
+<span class="comment">% - it has a constraint on the maximum ripple around unit gain in the beamwidth</span>
+<span class="comment">%</span>
+<span class="comment">%   minimize   max |y(theta)|                   for theta in the stop-beamwidth</span>
+<span class="comment">%       s.t.   1/delta &lt;= |y(theta)| &lt;= delta   for theta in the pass-beamwidth</span>
+<span class="comment">%</span>
+<span class="comment">% We first replace the look-angle variable theta with the "frequency"</span>
+<span class="comment">% variable omega, defined by omega = -2*pi*d/lambda*cos(theta).</span>
+<span class="comment">% This transforms the antenna pattern y(theta) into a standard discrete</span>
+<span class="comment">% Fourier transform of array weights w. Then we apply another change of</span>
+<span class="comment">% variables: we replace w with its auto-correlation coefficients r.</span>
+<span class="comment">%</span>
+<span class="comment">% Now the problem can be solved via spectral factorization approach:</span>
+<span class="comment">%</span>
+<span class="comment">%   minimize   max R(omega)                        for omega in the stopband</span>
+<span class="comment">%       s.t.   (1/delta)^2 &lt;= R(omega) &lt;= delta^2  for omega in the passband</span>
+<span class="comment">%              R(omega) &gt;= 0                       for all omega</span>
+<span class="comment">%</span>
+<span class="comment">% where R(omega) is the squared magnitude of the y(theta) array response</span>
+<span class="comment">% (and the Fourier transform of the autocorrelation coefficients r).</span>
+<span class="comment">% Variables are coefficients r. delta is the allowed passband ripple.</span>
+<span class="comment">% This is a convex problem (can be formulated as an LP after sampling).</span>
+<span class="comment">%</span>
+<span class="comment">% Written for CVX by Almir Mutapcic 02/02/06</span>
+
+<span class="comment">%********************************************************************</span>
+<span class="comment">% problem specs: a uniform line array with inter-element spacing d</span>
+<span class="comment">%                antenna element locations are at d*[0:n-1]</span>
+<span class="comment">%                (the array pattern will be symmetric around origin)</span>
+<span class="comment">%********************************************************************</span>
+n = 20;               <span class="comment">% number of antenna elements</span>
+lambda = 1;           <span class="comment">% wavelength</span>
+d = 0.45*lambda;      <span class="comment">% inter-element spacing</span>
+
+<span class="comment">% passband direction from 30 to 60 degrees (30 degrees bandwidth)</span>
+<span class="comment">% transition band is 15 degrees on both sides of the passband</span>
+theta_pass = 40;
+theta_stop = 50;
+
+<span class="comment">% passband max allowed ripple</span>
+ripple = 0.1; <span class="comment">% in dB (+/- around the unit gain)</span>
+
+<span class="comment">%********************************************************************</span>
+<span class="comment">% construct optimization data</span>
+<span class="comment">%********************************************************************</span>
+<span class="comment">% number of frequency samples</span>
+m = 30*n;
+
+<span class="comment">% convert passband and stopband angles into omega frequencies</span>
+omega_zero = -2*pi*d/lambda;
+omega_pass = -2*pi*d/lambda*cos(theta_pass*pi/180);
+omega_stop = -2*pi*d/lambda*cos(theta_stop*pi/180);
+omega_pi   = +2*pi*d/lambda;
+
+<span class="comment">% build matrix A that relates R(omega) and r, ie, R = A*r</span>
+omega = linspace(-pi,pi,m)';
+A = exp( -j*omega(:)*[1-n:n-1] );
+
+<span class="comment">% passband constraint matrix</span>
+Ap = A(omega &gt;= omega_zero &amp; omega &lt;= omega_pass,:);
+
+<span class="comment">% stopband constraint matrix</span>
+As = A(omega &gt;= omega_stop &amp; omega &lt;= omega_pi,:);
+
+<span class="comment">%********************************************************************</span>
+<span class="comment">% formulate and solve the magnitude design problem</span>
+<span class="comment">%********************************************************************</span>
+cvx_begin
+  variable <span class="string">r(2*n-1,1)</span> <span class="string">complex</span>
+  <span class="comment">% minimize stopband attenuation</span>
+  minimize( max( real( As*r ) ) )
+  subject <span class="string">to</span>
+    <span class="comment">% passband ripple constraints</span>
+    (10^(-ripple/20))^2 &lt;= real( Ap*r ) &lt;= (10^(+ripple/20))^2;
+    <span class="comment">% nonnegative-real constraint for all frequencies</span>
+    <span class="comment">% a bit redundant: the passband frequencies are already constrained</span>
+    real( A*r ) &gt;= 0;
+    <span class="comment">% auto-correlation symmetry constraints</span>
+    imag(r(n)) == 0;
+    r(n-1:-1:1) == conj(r(n+1:end));
+cvx_end
+
+<span class="comment">% check if problem was successfully solved</span>
+<span class="keyword">if</span> ~strfind(cvx_status,<span class="string">'Solved'</span>)
+    <span class="keyword">return</span>
+<span class="keyword">end</span>
+
+<span class="comment">% find antenna weights by computing the spectral factorization</span>
+w = spectral_fact(r);
+
+<span class="comment">% divided by 2 since this is in PSD domain</span>
+min_sidelobe_level = 10*log10( cvx_optval );
+fprintf(1,<span class="string">'The minimum sidelobe level is %3.2f dB.\n\n'</span>,<span class="keyword">...</span>
+          min_sidelobe_level);
+
+<span class="comment">%********************************************************************</span>
+<span class="comment">% plots</span>
+<span class="comment">%********************************************************************</span>
+<span class="comment">% build matrix G that relates y(theta) and w, ie, y = G*w</span>
+theta = [-180:180]';
+G = kron( cos(pi*theta/180), [0:n-1] );
+G = exp(2*pi*i*d/lambda*G);
+y = G*w;
+
+<span class="comment">% plot array pattern</span>
+figure(1), clf
+ymin = -40; ymax = 5;
+plot([-180:180], 20*log10(abs(y)), <span class="keyword">...</span>
+     [theta_stop theta_stop],[ymin ymax],<span class="string">'r--'</span>,<span class="keyword">...</span>
+     [-theta_pass -theta_pass],[ymin ymax],<span class="string">'r--'</span>,<span class="keyword">...</span>
+     [-theta_stop -theta_stop],[ymin ymax],<span class="string">'r--'</span>,<span class="keyword">...</span>
+     [theta_pass theta_pass],[ymin ymax],<span class="string">'r--'</span>);
+xlabel(<span class="string">'look angle'</span>), ylabel(<span class="string">'mag y(theta) in dB'</span>);
+axis([-180 180 ymin ymax]);
+
+<span class="comment">% polar plot</span>
+figure(2), clf
+zerodB = 50;
+dBY = 20*log10(abs(y)) + zerodB;
+plot(dBY.*cos(pi*theta/180), dBY.*sin(pi*theta/180), <span class="string">'-'</span>);
+axis([-zerodB zerodB -zerodB zerodB]), axis(<span class="string">'off'</span>), axis(<span class="string">'square'</span>)
+hold <span class="string">on</span>
+plot(zerodB*cos(pi*theta/180),zerodB*sin(pi*theta/180),<span class="string">'k:'</span>) <span class="comment">% 0 dB</span>
+plot( (min_sidelobe_level + zerodB)*cos(pi*theta/180), <span class="keyword">...</span>
+      (min_sidelobe_level + zerodB)*sin(pi*theta/180),<span class="string">'k:'</span>)  <span class="comment">% min level</span>
+text(-zerodB,0,<span class="string">'0 dB'</span>)
+text(-(min_sidelobe_level + zerodB),0,sprintf(<span class="string">'%0.1f dB'</span>,min_sidelobe_level));
+plot([0 60*cos(theta_pass*pi/180)], [0 60*sin(theta_pass*pi/180)], <span class="string">'k:'</span>)
+plot([0 60*cos(-theta_pass*pi/180)],[0 60*sin(-theta_pass*pi/180)],<span class="string">'k:'</span>)
+plot([0 60*cos(theta_stop*pi/180)], [0 60*sin(theta_stop*pi/180)], <span class="string">'k:'</span>)
+plot([0 60*cos(-theta_stop*pi/180)],[0 60*sin(-theta_stop*pi/180)],<span class="string">'k:'</span>)
+hold <span class="string">off</span>
+</pre>
+<a id="output"></a>
+<pre class="codeoutput">
+ 
+Calling Mosek 9.1.9: 1171 variables, 40 equality constraints
+   For improved efficiency, Mosek is solving the dual problem.
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+MOSEK warning 710: #19 (nearly) zero elements are specified in sparse col '' (571) of matrix 'A'.
+MOSEK warning 710: #19 (nearly) zero elements are specified in sparse col '' (1170) of matrix 'A'.
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : LO (linear optimization problem)
+  Constraints            : 40              
+  Cones                  : 0               
+  Scalar variables       : 1171            
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.01    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : LO (linear optimization problem)
+  Constraints            : 40              
+  Cones                  : 0               
+  Scalar variables       : 1171            
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 40
+Optimizer  - Cones                  : 0
+Optimizer  - Scalar variables       : 1106              conic                  : 0               
+Optimizer  - Semi-definite variables: 0                 scalarized             : 0               
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 820               after factor           : 820             
+Factor     - dense dim.             : 0                 flops                  : 1.68e+06        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   8.9e+02  4.0e+00  7.9e+00  0.00e+00   2.947569365e+00   0.000000000e+00   4.0e+00  0.01  
+1   1.2e+02  5.5e-01  1.1e+00  2.71e+00   -1.529008670e-01  -2.384358179e-01  5.5e-01  0.02  
+2   4.9e+01  2.2e-01  4.4e-01  3.97e+00   -4.425618567e-02  -5.651547334e-02  2.2e-01  0.02  
+3   2.1e+01  9.5e-02  2.0e-01  2.18e+00   -1.331325515e-02  -1.707565750e-02  9.6e-02  0.02  
+4   1.1e+01  4.9e-02  1.0e-01  1.41e+00   -6.910651456e-03  -8.672733903e-03  4.9e-02  0.02  
+5   4.0e+00  1.8e-02  3.8e-02  1.21e+00   -4.094147002e-03  -4.716241084e-03  1.8e-02  0.03  
+6   2.1e+00  9.3e-03  1.9e-02  1.00e+00   -3.687505923e-03  -4.013387222e-03  9.4e-03  0.03  
+7   8.6e-01  3.9e-03  8.0e-03  9.67e-01   -3.495981730e-03  -3.632753953e-03  3.9e-03  0.03  
+8   4.4e-02  2.0e-04  4.1e-04  1.01e+00   -3.432986425e-03  -3.439912616e-03  2.0e-04  0.03  
+9   1.3e-02  6.0e-05  1.2e-04  9.94e-01   -3.429045476e-03  -3.431146180e-03  6.1e-05  0.03  
+10  1.3e-03  5.8e-06  1.2e-05  1.00e+00   -3.427957151e-03  -3.428160194e-03  5.9e-06  0.03  
+11  2.7e-05  1.2e-07  2.5e-07  1.00e+00   -3.428141962e-03  -3.428146250e-03  1.2e-07  0.04  
+12  2.7e-09  1.2e-11  2.6e-11  1.00e+00   -3.428146796e-03  -3.428146797e-03  1.3e-11  0.04  
+Basis identification started.
+Primal basis identification phase started.
+Primal basis identification phase terminated. Time: 0.00
+Dual basis identification phase started.
+Dual basis identification phase terminated. Time: 0.00
+Basis identification terminated. Time: 0.00
+Optimizer terminated. Time: 0.05    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: -3.4281467964e-03   nrm: 1e+00    Viol.  con: 5e-11    var: 0e+00  
+  Dual.    obj: -3.4281467968e-03   nrm: 1e+00    Viol.  con: 0e+00    var: 3e-15  
+
+Basic solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: -3.4281467969e-03   nrm: 1e+00    Viol.  con: 8e-16    var: 0e+00  
+  Dual.    obj: -3.4281467968e-03   nrm: 1e+00    Viol.  con: 0e+00    var: 1e-13  
+Optimizer summary
+  Optimizer                 -                        time: 0.05    
+    Interior-point          - iterations : 12        time: 0.04    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): +0.00342815
+ 
+The minimum sidelobe level is -24.65 dB.
+
+</pre>
+<a id="plots"></a>
+<div id="plotoutput">
+<img src="line_array_spec_fact__01.png" alt=""> <img src="line_array_spec_fact__02.png" alt=""> 
+</div>
+</div>
+</body>
+</html>

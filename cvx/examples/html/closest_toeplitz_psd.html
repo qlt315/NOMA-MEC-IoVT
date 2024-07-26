@@ -1,0 +1,178 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Closest Toeplitz SDP search.</title>
+<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/html/closest_toeplitz_psd.html">
+<link rel="stylesheet" href="../examples.css" type="text/css">
+</head>
+<body>
+<div id="header">
+<h1>Closest Toeplitz SDP search.</h1>
+Jump to:&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#source">Source code</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#output">Text output</a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+Plots
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../index.html">Library index</a>
+</div>
+<div id="content">
+<a id="source"></a>
+<pre class="codeinput">
+<span class="comment">% This script finds a Toeplitz Hermitian PSD matrix that is closest to a</span>
+<span class="comment">% given Hermitian matrix, as measured by the Frobenius norm. That is, for</span>
+<span class="comment">% a given matrix P, it solves:</span>
+<span class="comment">%    minimize   || Z - P ||_F</span>
+<span class="comment">%    subject to Z &gt;= 0</span>
+<span class="comment">%</span>
+<span class="comment">% Adapted from an example provided in the SeDuMi documentation. Notice</span>
+<span class="comment">% the use of SDP mode to simplify the semidefinite constraint.</span>
+
+<span class="comment">% The data. P is Hermitian, but is neither Toeplitz nor PSD.</span>
+P = [ 4,     1+2*j,     3-j       ; <span class="keyword">...</span>
+      1-2*j, 3.5,       0.8+2.3*j ; <span class="keyword">...</span>
+      3+j,   0.8-2.3*j, 4         ];
+
+<span class="comment">% Construct and solve the model</span>
+n = size( P, 1 );
+cvx_begin <span class="string">sdp</span>
+    variable <span class="string">Z(n,n)</span> <span class="string">hermitian</span> <span class="string">toeplitz</span>
+    dual <span class="string">variable</span> <span class="string">Q</span>
+    minimize( norm( Z - P, <span class="string">'fro'</span> ) )
+    Z &gt;= 0 : Q;
+cvx_end
+
+<span class="comment">% Display resuls</span>
+disp( <span class="string">'The original matrix, P: '</span> );
+disp( P )
+disp( <span class="string">'The optimal point, Z:'</span> );
+disp( Z )
+disp( <span class="string">'The optimal dual variable, Q:'</span> );
+disp( Q )
+disp( <span class="string">'min( eig( Z ) ), min( eig( Q ) ) (both should be nonnegative, or close):'</span> );
+disp( sprintf( <span class="string">'   %g   %g\n'</span>, min( eig( Z ) ), min( eig( Q ) ) ) );
+disp( <span class="string">'The optimal value, || Z - P ||_F:'</span> );
+disp( norm( Z - P, <span class="string">'fro'</span> ) );
+disp( <span class="string">'Complementary slackness: Z * Q, should be near zero:'</span> );
+disp( Z * Q )
+</pre>
+<a id="output"></a>
+<pre class="codeoutput">
+ 
+Calling Mosek 9.1.9: 20 variables, 6 equality constraints
+   For improved efficiency, Mosek is solving the dual problem.
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 6               
+  Cones                  : 1               
+  Scalar variables       : 11              
+  Matrix variables       : 1               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 6               
+  Cones                  : 1               
+  Scalar variables       : 11              
+  Matrix variables       : 1               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 5
+Optimizer  - Cones                  : 1
+Optimizer  - Scalar variables       : 7                 conic                  : 7               
+Optimizer  - Semi-definite variables: 1                 scalarized             : 21              
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 15                after factor           : 15              
+Factor     - dense dim.             : 0                 flops                  : 1.71e+03        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   3.0e+00  4.2e+00  2.3e+01  0.00e+00   2.100000000e+01   -1.000000000e+00  1.0e+00  0.00  
+1   5.0e-01  7.1e-01  5.7e+00  -6.75e-01  5.553938940e+00   -4.067426847e+00  1.7e-01  0.01  
+2   1.2e-01  1.7e-01  9.4e-01  3.88e-01   1.234217382e-01   -2.772964901e+00  4.1e-02  0.01  
+3   1.3e-02  1.8e-02  1.9e-02  1.05e+00   -1.236225345e+00  -1.580956459e+00  4.3e-03  0.01  
+4   4.3e-04  6.1e-04  1.1e-04  1.01e+00   -1.444457521e+00  -1.455975261e+00  1.4e-04  0.01  
+5   4.0e-05  5.6e-05  3.0e-06  1.01e+00   -1.450262016e+00  -1.451315401e+00  1.3e-05  0.01  
+6   1.2e-06  1.7e-06  1.6e-08  1.00e+00   -1.450787698e+00  -1.450819401e+00  4.0e-07  0.01  
+7   1.2e-08  1.7e-08  1.6e-11  1.00e+00   -1.450803301e+00  -1.450803622e+00  4.1e-09  0.01  
+8   2.2e-09  3.1e-09  1.3e-12  1.00e+00   -1.450803469e+00  -1.450803527e+00  7.4e-10  0.01  
+9   4.0e-11  1.1e-09  4.2e-15  1.00e+00   -1.450803513e+00  -1.450803514e+00  1.3e-11  0.01  
+Optimizer terminated. Time: 0.02    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: -1.4508035135e+00   nrm: 1e+00    Viol.  con: 3e-10    var: 0e+00    barvar: 0e+00    cones: 0e+00  
+  Dual.    obj: -1.4508035144e+00   nrm: 4e+00    Viol.  con: 0e+00    var: 2e-11    barvar: 4e-09    cones: 0e+00  
+Optimizer summary
+  Optimizer                 -                        time: 0.02    
+    Interior-point          - iterations : 9         time: 0.01    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): +1.4508
+ 
+The original matrix, P: 
+   4.0000 + 0.0000i   1.0000 + 2.0000i   3.0000 - 1.0000i
+   1.0000 - 2.0000i   3.5000 + 0.0000i   0.8000 + 2.3000i
+   3.0000 + 1.0000i   0.8000 - 2.3000i   4.0000 + 0.0000i
+
+The optimal point, Z:
+   4.2827 + 0.0000i   0.8079 + 1.7342i   2.5574 - 0.7938i
+   0.8079 - 1.7342i   4.2827 + 0.0000i   0.8079 + 1.7342i
+   2.5574 + 0.7938i   0.8079 - 1.7342i   4.2827 + 0.0000i
+
+The optimal dual variable, Q:
+   0.3366 + 0.0000i  -0.0635 - 0.2866i  -0.3051 + 0.1422i
+  -0.0635 + 0.2866i   0.2561 + 0.0000i  -0.0635 - 0.2866i
+  -0.3051 - 0.1422i  -0.0635 + 0.2866i   0.3366 + 0.0000i
+
+min( eig( Z ) ), min( eig( Q ) ) (both should be nonnegative, or close):
+   3.58847e-10   5.12669e-11
+
+The optimal value, || Z - P ||_F:
+    1.4508
+
+Complementary slackness: Z * Q, should be near zero:
+   1.0e-05 *
+
+   0.1280 - 0.0034i  -0.0270 - 0.1083i  -0.1146 + 0.0571i
+   0.0635 - 0.2864i  -0.2559 - 0.0000i   0.0635 + 0.2864i
+  -0.1146 - 0.0571i  -0.0270 + 0.1083i   0.1280 + 0.0034i
+
+</pre>
+</div>
+</body>
+</html>

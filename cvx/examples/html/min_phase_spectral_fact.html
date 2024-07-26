@@ -1,0 +1,162 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Minimal phase spectral factorization</title>
+<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/html/min_phase_spectral_fact.html">
+<link rel="stylesheet" href="../examples.css" type="text/css">
+</head>
+<body>
+<div id="header">
+<h1>Minimal phase spectral factorization</h1>
+Jump to:&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#source">Source code</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#output">Text output</a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+Plots
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../index.html">Library index</a>
+</div>
+<div id="content">
+<a id="source"></a>
+<pre class="codeinput">
+<span class="comment">% A PSD matrix is found which minimizes a weighted trace while obtaining</span>
+<span class="comment">% fixed sums along the diagonals. Notice the use of a FOR loop to access</span>
+<span class="comment">% the diagonals of X. A later version of CVX will eliminate the need for</span>
+<span class="comment">% this by allowing the use of the SPDIAGS function in side models.</span>
+<span class="comment">% Nevertheless, this example provides an illustration of the use of</span>
+<span class="comment">% standard Matlab control statements to build models.</span>
+<span class="comment">%</span>
+<span class="comment">% Adapted from an example provided in the SeDuMi documentation.</span>
+
+<span class="comment">% Generate data</span>
+b = [2; 0.2; -0.3];
+n = length( b );
+
+<span class="comment">% Create and solve model</span>
+cvx_begin <span class="string">sdp</span>
+    variable <span class="string">X( n, n )</span> <span class="string">symmetric</span>
+    dual <span class="string">variable</span> <span class="string">y{n}</span>
+    dual <span class="string">variable</span> <span class="string">Z</span>
+    minimize( ( n - 1 : -1 : 0 ) * diag( X ) );
+    <span class="keyword">for</span> k = 1 : n,
+        sum( diag( X, k - 1 ) ) == b( k ) : y{k};
+    <span class="keyword">end</span>
+    X &gt;= 0 : Z;
+cvx_end
+y = [ y{:} ]';
+
+<span class="comment">% Display resuls</span>
+disp( <span class="string">'The optimal point, X:'</span> );
+disp( X )
+disp( <span class="string">'The diagonal sums:'</span> );
+disp( sum( spdiags( X, 0:n-1 ), 1 ) );
+disp( <span class="string">'min( eig( X ) ) (should be nonnegative):'</span> );
+disp( min( eig( X ) ) )
+disp( <span class="string">'The optimal weighted trace:'</span> );
+disp( ( n - 1 : -1 : 0 ) * diag( X ) );
+</pre>
+<a id="output"></a>
+<pre class="codeoutput">
+ 
+Calling Mosek 9.1.9: 6 variables, 3 equality constraints
+   For improved efficiency, Mosek is solving the dual problem.
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 3               
+  Cones                  : 0               
+  Scalar variables       : 0               
+  Matrix variables       : 1               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 2                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 3               
+  Cones                  : 0               
+  Scalar variables       : 0               
+  Matrix variables       : 1               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 3
+Optimizer  - Cones                  : 0
+Optimizer  - Scalar variables       : 0                 conic                  : 0               
+Optimizer  - Semi-definite variables: 1                 scalarized             : 6               
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 6                 after factor           : 6               
+Factor     - dense dim.             : 0                 flops                  : 1.86e+02        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   2.0e+00  1.0e+00  3.0e+00  0.00e+00   2.000000000e+00   0.000000000e+00   1.0e+00  0.00  
+1   2.6e-01  1.3e-01  2.1e-01  3.18e-01   3.319100609e+00   3.082073081e+00   1.3e-01  0.01  
+2   5.0e-03  2.5e-03  7.3e-04  7.99e-01   3.866582998e+00   3.864428402e+00   2.5e-03  0.01  
+3   2.4e-05  1.2e-05  2.5e-07  9.96e-01   3.877220069e+00   3.877210937e+00   1.2e-05  0.01  
+4   4.9e-07  2.5e-07  7.2e-10  1.00e+00   3.877266626e+00   3.877266439e+00   2.5e-07  0.01  
+5   2.0e-08  9.9e-09  5.8e-12  1.00e+00   3.877267410e+00   3.877267402e+00   9.9e-09  0.01  
+Optimizer terminated. Time: 0.01    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: 3.8772674101e+00    nrm: 2e+00    Viol.  con: 3e-08    barvar: 0e+00  
+  Dual.    obj: 3.8772674025e+00    nrm: 2e+00    Viol.  con: 0e+00    barvar: 2e-08  
+Optimizer summary
+  Optimizer                 -                        time: 0.01    
+    Interior-point          - iterations : 5         time: 0.01    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): +0.122733
+ 
+The optimal point, X:
+    0.0468   -0.0369   -0.3000
+   -0.0369    0.0292    0.2369
+   -0.3000    0.2369    1.9240
+
+The diagonal sums:
+    2.0000    0.2000   -0.3000
+
+min( eig( X ) ) (should be nonnegative):
+  -1.3182e-08
+
+The optimal weighted trace:
+    0.1227
+
+</pre>
+</div>
+</body>
+</html>

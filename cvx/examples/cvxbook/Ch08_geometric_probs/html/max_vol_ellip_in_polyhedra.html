@@ -1,0 +1,178 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Maximum volume inscribed ellipsoid in a polyhedron</title>
+<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/cvxbook/Ch08_geometric_probs/html/max_vol_ellip_in_polyhedra.html">
+<link rel="stylesheet" href="../../../examples.css" type="text/css">
+</head>
+<body>
+<div id="header">
+<h1>Maximum volume inscribed ellipsoid in a polyhedron</h1>
+Jump to:&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#source">Source code</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#output">Text output</a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#plots">Plots</a>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../../../index.html">Library index</a>
+</div>
+<div id="content">
+<a id="source"></a>
+<pre class="codeinput">
+<span class="comment">% Section 8.4.1, Boyd &amp; Vandenberghe "Convex Optimization"</span>
+<span class="comment">% Original version by Lieven Vandenberghe</span>
+<span class="comment">% Updated for CVX by Almir Mutapcic - Jan 2006</span>
+<span class="comment">% (a figure is generated)</span>
+<span class="comment">%</span>
+<span class="comment">% We find the ellipsoid E of maximum volume that lies inside of</span>
+<span class="comment">% a polyhedra C described by a set of linear inequalities.</span>
+<span class="comment">%</span>
+<span class="comment">% C = { x | a_i^T x &lt;= b_i, i = 1,...,m } (polyhedra)</span>
+<span class="comment">% E = { Bu + d | || u || &lt;= 1 } (ellipsoid)</span>
+<span class="comment">%</span>
+<span class="comment">% This problem can be formulated as a log det maximization</span>
+<span class="comment">% which can then be computed using the det_rootn function, ie,</span>
+<span class="comment">%     maximize     log det B</span>
+<span class="comment">%     subject to   || B a_i || + a_i^T d &lt;= b,  for i = 1,...,m</span>
+
+<span class="comment">% problem data</span>
+n = 2;
+px = [0 .5 2 3 1];
+py = [0 1 1.5 .5 -.5];
+m = size(px,2);
+pxint = sum(px)/m; pyint = sum(py)/m;
+px = [px px(1)];
+py = [py py(1)];
+
+<span class="comment">% generate A,b</span>
+A = zeros(m,n); b = zeros(m,1);
+<span class="keyword">for</span> i=1:m
+  A(i,:) = null([px(i+1)-px(i) py(i+1)-py(i)])';
+  b(i) = A(i,:)*.5*[px(i+1)+px(i); py(i+1)+py(i)];
+  <span class="keyword">if</span> A(i,:)*[pxint; pyint]-b(i)&gt;0
+    A(i,:) = -A(i,:);
+    b(i) = -b(i);
+  <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="comment">% formulate and solve the problem</span>
+cvx_begin
+    variable <span class="string">B(n,n)</span> <span class="string">symmetric</span>
+    variable <span class="string">d(n)</span>
+    maximize( det_rootn( B ) )
+    subject <span class="string">to</span>
+       <span class="keyword">for</span> i = 1:m
+           norm( B*A(i,:)', 2 ) + A(i,:)*d &lt;= b(i);
+       <span class="keyword">end</span>
+cvx_end
+
+<span class="comment">% make the plots</span>
+noangles = 200;
+angles   = linspace( 0, 2 * pi, noangles );
+ellipse_inner  = B * [ cos(angles) ; sin(angles) ] + d * ones( 1, noangles );
+ellipse_outer  = 2*B * [ cos(angles) ; sin(angles) ] + d * ones( 1, noangles );
+
+clf
+plot(px,py)
+hold <span class="string">on</span>
+plot( ellipse_inner(1,:), ellipse_inner(2,:), <span class="string">'r--'</span> );
+plot( ellipse_outer(1,:), ellipse_outer(2,:), <span class="string">'r--'</span> );
+axis <span class="string">square</span>
+axis <span class="string">off</span>
+hold <span class="string">off</span>
+</pre>
+<a id="output"></a>
+<pre class="codeoutput">
+ 
+Calling Mosek 9.1.9: 34 variables, 15 equality constraints
+   For improved efficiency, Mosek is solving the dual problem.
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 15              
+  Cones                  : 6               
+  Scalar variables       : 24              
+  Matrix variables       : 1               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 15              
+  Cones                  : 6               
+  Scalar variables       : 24              
+  Matrix variables       : 1               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 8
+Optimizer  - Cones                  : 6
+Optimizer  - Scalar variables       : 18                conic                  : 18              
+Optimizer  - Semi-definite variables: 1                 scalarized             : 10              
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 30                after factor           : 30              
+Factor     - dense dim.             : 0                 flops                  : 6.23e+02        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   1.0e+00  1.5e+00  5.2e+00  0.00e+00   4.159870340e+00   0.000000000e+00   1.0e+00  0.00  
+1   1.8e-01  2.6e-01  3.6e-01  9.61e-01   1.076588449e+00   3.304561450e-01   1.8e-01  0.01  
+2   3.7e-02  5.4e-02  4.6e-02  8.56e-01   8.459002550e-01   6.798381990e-01   3.7e-02  0.01  
+3   4.8e-03  7.0e-03  2.4e-03  7.20e-01   9.434346967e-01   9.199445707e-01   4.8e-03  0.01  
+4   1.3e-04  2.0e-04  1.1e-05  9.71e-01   9.519921837e-01   9.513316720e-01   1.3e-04  0.01  
+5   4.1e-06  6.1e-06  6.3e-08  9.99e-01   9.523018434e-01   9.522813332e-01   4.1e-06  0.01  
+6   2.3e-07  3.4e-07  8.4e-10  1.00e+00   9.523076494e-01   9.523064894e-01   2.3e-07  0.01  
+7   2.9e-08  4.2e-08  3.6e-11  1.00e+00   9.523075616e-01   9.523074184e-01   2.9e-08  0.01  
+8   1.8e-09  2.6e-09  5.5e-13  1.00e+00   9.523075144e-01   9.523075056e-01   1.8e-09  0.01  
+Optimizer terminated. Time: 0.02    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: 9.5230751439e-01    nrm: 1e+00    Viol.  con: 5e-09    var: 0e+00    barvar: 0e+00    cones: 5e-10  
+  Dual.    obj: 9.5230750558e-01    nrm: 2e+00    Viol.  con: 0e+00    var: 4e-09    barvar: 2e-09    cones: 0e+00  
+Optimizer summary
+  Optimizer                 -                        time: 0.02    
+    Interior-point          - iterations : 8         time: 0.01    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): +0.952308
+ 
+</pre>
+<a id="plots"></a>
+<div id="plotoutput">
+<img src="max_vol_ellip_in_polyhedra__01.png" alt=""> 
+</div>
+</div>
+</body>
+</html>

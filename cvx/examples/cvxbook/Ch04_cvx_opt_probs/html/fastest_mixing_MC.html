@@ -1,0 +1,157 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Section 4.6.3: Find the fastest mixing Markov chain on a graph</title>
+<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/cvxbook/Ch04_cvx_opt_probs/html/fastest_mixing_MC.html">
+<link rel="stylesheet" href="../../../examples.css" type="text/css">
+</head>
+<body>
+<div id="header">
+<h1>Section 4.6.3: Find the fastest mixing Markov chain on a graph</h1>
+Jump to:&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#source">Source code</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#output">Text output</a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+Plots
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../../../index.html">Library index</a>
+</div>
+<div id="content">
+<a id="source"></a>
+<pre class="codeinput">
+<span class="comment">% Boyd &amp; Vandenberghe "Convex Optimization"</span>
+<span class="comment">% Jo&euml;lle Skaf - 09/26/05</span>
+<span class="comment">%</span>
+<span class="comment">% The 'fastest mixing Markov chain problem' is to find a transition</span>
+<span class="comment">% probability matrix P on a graph E that minimizes the mixing rate r, where</span>
+<span class="comment">% r = max{ lambda_2, -lambda_n } with lambda_1&gt;=...&gt;=lambda_n being the</span>
+<span class="comment">% eigenvalues of P.</span>
+
+<span class="comment">% Generate input data</span>
+n = 5;
+E = [0 1 0 1 1; <span class="keyword">...</span>
+     1 0 1 0 1; <span class="keyword">...</span>
+     0 1 0 1 1; <span class="keyword">...</span>
+     1 0 1 0 1; <span class="keyword">...</span>
+     1 1 1 1 0];
+
+<span class="comment">% Create and solve model</span>
+cvx_begin
+    variable <span class="string">P(n,n)</span> <span class="string">symmetric</span>
+    minimize(norm(P - (1/n)*ones(n)))
+    P*ones(n,1) == ones(n,1);
+    P &gt;= 0;
+    P(E==0) == 0;
+cvx_end
+e = flipud(eig(P));
+r = max(e(2), -e(n));
+
+<span class="comment">% Display results</span>
+disp(<span class="string">'------------------------------------------------------------------------'</span>);
+disp(<span class="string">'The transition probability matrix of the optimal Markov chain is: '</span>);
+disp(P);
+disp(<span class="string">'The optimal mixing rate is: '</span>);
+disp(r);
+</pre>
+<a id="output"></a>
+<pre class="codeoutput">
+ 
+Calling Mosek 9.1.9: 75 variables, 9 equality constraints
+   For improved efficiency, Mosek is solving the dual problem.
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 9               
+  Cones                  : 0               
+  Scalar variables       : 20              
+  Matrix variables       : 1               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 2                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 9               
+  Cones                  : 0               
+  Scalar variables       : 20              
+  Matrix variables       : 1               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 9
+Optimizer  - Cones                  : 1
+Optimizer  - Scalar variables       : 14                conic                  : 6               
+Optimizer  - Semi-definite variables: 1                 scalarized             : 55              
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 45                after factor           : 45              
+Factor     - dense dim.             : 0                 flops                  : 3.74e+03        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   9.0e+00  1.0e+00  1.0e+00  0.00e+00   0.000000000e+00   0.000000000e+00   1.0e+00  0.00  
+1   3.0e+00  3.4e-01  1.2e-01  2.01e+00   -2.958763608e-01  -3.667314389e-01  3.4e-01  0.01  
+2   9.8e-01  1.1e-01  2.5e-02  8.03e-01   -6.280645650e-01  -6.477150177e-01  1.1e-01  0.01  
+3   5.5e-02  6.1e-03  3.0e-04  1.05e+00   -7.441472578e-01  -7.456864128e-01  6.1e-03  0.01  
+4   2.5e-06  2.7e-07  6.1e-11  1.01e+00   -7.499999017e-01  -7.500000298e-01  2.7e-07  0.01  
+5   6.2e-13  6.9e-14  1.5e-17  1.00e+00   -7.500000000e-01  -7.500000000e-01  6.9e-14  0.01  
+Optimizer terminated. Time: 0.02    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: -7.5000000000e-01   nrm: 1e+00    Viol.  con: 4e-13    var: 0e+00    barvar: 0e+00  
+  Dual.    obj: -7.5000000000e-01   nrm: 8e-01    Viol.  con: 0e+00    var: 9e-15    barvar: 5e-14  
+Optimizer summary
+  Optimizer                 -                        time: 0.02    
+    Interior-point          - iterations : 5         time: 0.01    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): +0.75
+ 
+------------------------------------------------------------------------
+The transition probability matrix of the optimal Markov chain is: 
+         0    0.3750         0    0.3750    0.2500
+    0.3750         0    0.3750         0    0.2500
+         0    0.3750         0    0.3750    0.2500
+    0.3750         0    0.3750         0    0.2500
+    0.2500    0.2500    0.2500    0.2500         0
+
+The optimal mixing rate is: 
+    0.7500
+
+</pre>
+</div>
+</body>
+</html>

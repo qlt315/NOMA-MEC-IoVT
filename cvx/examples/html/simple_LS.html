@@ -1,0 +1,128 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Builds and solves a simple least-squares problem using cvx</title>
+<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/html/simple_LS.html">
+<link rel="stylesheet" href="../examples.css" type="text/css">
+</head>
+<body>
+<div id="header">
+<h1>Builds and solves a simple least-squares problem using cvx</h1>
+Jump to:&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#source">Source code</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#output">Text output</a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+Plots
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../index.html">Library index</a>
+</div>
+<div id="content">
+<a id="source"></a>
+<pre class="codeinput">
+echo <span class="string">on</span>
+
+n = 100;
+A = randn(2*n,n);
+b = randn(2*n,1);
+cvx_begin
+   variable <span class="string">x(n)</span>
+   minimize( norm( A*x-b ) )
+cvx_end
+
+echo <span class="string">off</span>
+</pre>
+<a id="output"></a>
+<pre class="codeoutput">
+n = 100;
+A = randn(2*n,n);
+b = randn(2*n,1);
+cvx_begin
+   variable x(n)
+   minimize( norm( A*x-b ) )
+cvx_end
+ 
+Calling Mosek 9.1.9: 201 variables, 101 equality constraints
+   For improved efficiency, Mosek is solving the dual problem.
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 101             
+  Cones                  : 1               
+  Scalar variables       : 201             
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 101             
+  Cones                  : 1               
+  Scalar variables       : 201             
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 100
+Optimizer  - Cones                  : 1
+Optimizer  - Scalar variables       : 201               conic                  : 201             
+Optimizer  - Semi-definite variables: 0                 scalarized             : 0               
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 5050              after factor           : 5050            
+Factor     - dense dim.             : 0                 flops                  : 2.37e+06        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   0.0e+00  2.5e+00  2.0e+00  0.00e+00   0.000000000e+00   -1.000000000e+00  1.0e+00  0.01  
+1   1.0e-14  2.0e-01  2.4e-01  -9.59e-01  -7.817372397e+00  -6.384277430e+00  8.0e-02  0.02  
+2   1.7e-15  1.8e-03  1.7e-04  5.88e-01   -9.702996479e+00  -9.697506233e+00  7.2e-04  0.02  
+3   9.7e-12  9.5e-11  1.1e-15  9.95e-01   -9.734018206e+00  -9.734018207e+00  1.8e-12  0.02  
+Optimizer terminated. Time: 0.02    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: -9.7340182062e+00   nrm: 1e+00    Viol.  con: 1e-15    var: 0e+00    cones: 0e+00  
+  Dual.    obj: -9.7340182072e+00   nrm: 1e+01    Viol.  con: 0e+00    var: 1e-10    cones: 0e+00  
+Optimizer summary
+  Optimizer                 -                        time: 0.02    
+    Interior-point          - iterations : 3         time: 0.02    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): +9.73402
+ 
+
+echo off
+</pre>
+</div>
+</body>
+</html>

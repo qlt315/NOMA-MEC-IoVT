@@ -1,0 +1,293 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Section 5.2.5: Mixed strategies for matrix games (LP formulation)</title>
+<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/cvxbook/Ch05_duality/html/matrix_games_LP.html">
+<link rel="stylesheet" href="../../../examples.css" type="text/css">
+</head>
+<body>
+<div id="header">
+<h1>Section 5.2.5: Mixed strategies for matrix games (LP formulation)</h1>
+Jump to:&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#source">Source code</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#output">Text output</a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+Plots
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../../../index.html">Library index</a>
+</div>
+<div id="content">
+<a id="source"></a>
+<pre class="codeinput">
+<span class="comment">% Boyd &amp; Vandenberghe, "Convex Optimization"</span>
+<span class="comment">% Jo&euml;lle Skaf - 08/24/05</span>
+<span class="comment">%</span>
+<span class="comment">% Player 1 wishes to choose u to minimize his expected payoff u'Pv, while</span>
+<span class="comment">% player 2 wishes to choose v to maximize u'Pv, where P is the payoff</span>
+<span class="comment">% matrix, u and v are the probability distributions of the choices of each</span>
+<span class="comment">% player (i.e. u&gt;=0, v&gt;=0, sum(u_i)=1, sum(v_i)=1)</span>
+<span class="comment">% LP formulation:   minimize    t</span>
+<span class="comment">%                       s.t.    u &gt;=0 , sum(u) = 1, P'*u &lt;= t*1</span>
+<span class="comment">%                   maximize    t</span>
+<span class="comment">%                       s.t.    v &gt;=0 , sum(v) = 1, P*v &gt;= t*1</span>
+
+<span class="comment">% Input data</span>
+randn(<span class="string">'state'</span>,0);
+n = 12;
+m = 12;
+P = randn(n,m);
+
+<span class="comment">% Optimal strategy for Player 1</span>
+fprintf(1,<span class="string">'Computing the optimal strategy for player 1 ... '</span>);
+
+cvx_begin
+    variables <span class="string">u(n)</span> <span class="string">t1</span>
+    minimize ( t1 )
+    u &gt;= 0;
+    ones(1,n)*u == 1;
+    P'*u &lt;= t1*ones(m,1);
+cvx_end
+
+fprintf(1,<span class="string">'Done! \n'</span>);
+
+<span class="comment">% Optimal strategy for Player 2</span>
+fprintf(1,<span class="string">'Computing the optimal strategy for player 2 ... '</span>);
+
+cvx_begin
+    variables <span class="string">v(m)</span> <span class="string">t2</span>
+    maximize ( t2 )
+    v &gt;= 0;
+    ones(1,m)*v == 1;
+    P*v &gt;= t2*ones(n,1);
+cvx_end
+
+fprintf(1,<span class="string">'Done! \n'</span>);
+
+<span class="comment">% Displaying results</span>
+disp(<span class="string">'------------------------------------------------------------------------'</span>);
+disp(<span class="string">'The optimal strategies for players 1 and 2 are respectively: '</span>);
+disp([u v]);
+disp(<span class="string">'The expected payoffs for player 1 and player 2 respectively are: '</span>);
+[t1 t2]
+disp(<span class="string">'They are equal as expected!'</span>);
+</pre>
+<a id="output"></a>
+<pre class="codeoutput">
+Computing the optimal strategy for player 1 ...  
+Calling Mosek 9.1.9: 25 variables, 13 equality constraints
+   For improved efficiency, Mosek is solving the dual problem.
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : LO (linear optimization problem)
+  Constraints            : 13              
+  Cones                  : 0               
+  Scalar variables       : 25              
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : LO (linear optimization problem)
+  Constraints            : 13              
+  Cones                  : 0               
+  Scalar variables       : 25              
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 13
+Optimizer  - Cones                  : 0
+Optimizer  - Scalar variables       : 26                conic                  : 0               
+Optimizer  - Semi-definite variables: 0                 scalarized             : 0               
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 91                after factor           : 91              
+Factor     - dense dim.             : 0                 flops                  : 3.34e+03        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   2.2e+01  2.0e+00  2.0e+00  0.00e+00   0.000000000e+00   0.000000000e+00   4.0e+00  0.00  
+1   5.9e+00  5.4e-01  5.4e-01  2.94e+00   2.491088385e-02   -4.511300985e-02  1.1e+00  0.01  
+2   2.4e+00  2.1e-01  2.1e-01  1.65e+00   2.359713864e-02   -2.703348050e-03  4.3e-01  0.01  
+3   3.6e-01  3.3e-02  3.3e-02  1.27e+00   4.372219258e-02   4.008718888e-02   6.6e-02  0.01  
+4   4.5e-02  4.1e-03  4.1e-03  1.04e+00   4.432272369e-02   4.387577779e-02   8.2e-03  0.01  
+5   1.3e-03  1.1e-04  1.1e-04  1.02e+00   4.484616797e-02   4.483360596e-02   2.3e-04  0.01  
+6   3.3e-07  3.0e-08  3.0e-08  1.00e+00   4.484042333e-02   4.484042011e-02   6.0e-08  0.01  
+Basis identification started.
+Primal basis identification phase started.
+Primal basis identification phase terminated. Time: 0.00
+Dual basis identification phase started.
+Dual basis identification phase terminated. Time: 0.00
+Basis identification terminated. Time: 0.00
+Optimizer terminated. Time: 0.01    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: 4.4840423334e-02    nrm: 1e+00    Viol.  con: 4e-08    var: 0e+00  
+  Dual.    obj: 4.4840420109e-02    nrm: 7e-01    Viol.  con: 0e+00    var: 1e-09  
+
+Basic solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: 4.4840422221e-02    nrm: 1e+00    Viol.  con: 6e-17    var: 0e+00  
+  Dual.    obj: 4.4840420109e-02    nrm: 7e-01    Viol.  con: 0e+00    var: 6e-09  
+Optimizer summary
+  Optimizer                 -                        time: 0.01    
+    Interior-point          - iterations : 6         time: 0.01    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): -0.0448404
+ 
+Done! 
+Computing the optimal strategy for player 2 ...  
+Calling Mosek 9.1.9: 25 variables, 13 equality constraints
+   For improved efficiency, Mosek is solving the dual problem.
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : LO (linear optimization problem)
+  Constraints            : 13              
+  Cones                  : 0               
+  Scalar variables       : 25              
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : LO (linear optimization problem)
+  Constraints            : 13              
+  Cones                  : 0               
+  Scalar variables       : 25              
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 13
+Optimizer  - Cones                  : 0
+Optimizer  - Scalar variables       : 26                conic                  : 0               
+Optimizer  - Semi-definite variables: 0                 scalarized             : 0               
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 91                after factor           : 91              
+Factor     - dense dim.             : 0                 flops                  : 3.34e+03        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   2.2e+01  2.0e+00  2.0e+00  0.00e+00   0.000000000e+00   0.000000000e+00   4.0e+00  0.00  
+1   7.8e+00  7.1e-01  7.1e-01  3.11e+00   -4.221775224e-02  -6.367209421e-02  1.4e+00  0.01  
+2   2.2e+00  2.0e-01  2.0e-01  1.62e+00   -5.045269958e-02  -7.643306967e-02  3.9e-01  0.01  
+3   2.9e-01  2.6e-02  2.6e-02  1.31e+00   -4.794188101e-02  -5.120950932e-02  5.3e-02  0.01  
+4   2.9e-02  2.6e-03  2.6e-03  1.03e+00   -4.477461238e-02  -4.509672836e-02  5.3e-03  0.01  
+5   6.2e-04  5.6e-05  5.6e-05  1.01e+00   -4.485260682e-02  -4.485940940e-02  1.1e-04  0.01  
+6   1.6e-07  1.5e-08  1.5e-08  1.00e+00   -4.484042510e-02  -4.484042684e-02  2.9e-08  0.01  
+Basis identification started.
+Primal basis identification phase started.
+Primal basis identification phase terminated. Time: 0.00
+Dual basis identification phase started.
+Dual basis identification phase terminated. Time: 0.00
+Basis identification terminated. Time: 0.00
+Optimizer terminated. Time: 0.01    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: -4.4840425103e-02   nrm: 1e+00    Viol.  con: 2e-08    var: 0e+00  
+  Dual.    obj: -4.4840426844e-02   nrm: 5e-01    Viol.  con: 0e+00    var: 1e-09  
+
+Basic solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: -4.4840422221e-02   nrm: 1e+00    Viol.  con: 2e-16    var: 0e+00  
+  Dual.    obj: -4.4840426844e-02   nrm: 5e-01    Viol.  con: 0e+00    var: 3e-09  
+Optimizer summary
+  Optimizer                 -                        time: 0.01    
+    Interior-point          - iterations : 6         time: 0.01    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): -0.0448404
+ 
+Done! 
+------------------------------------------------------------------------
+The optimal strategies for players 1 and 2 are respectively: 
+    0.2695    0.0686
+   -0.0000    0.1619
+    0.0973    0.0000
+    0.1573    0.2000
+    0.1145   -0.0000
+    0.0434    0.1545
+    0.0000    0.1146
+    0.0000   -0.0000
+    0.2511    0.1030
+    0.0670   -0.0000
+   -0.0000    0.0000
+    0.0000    0.1974
+
+The expected payoffs for player 1 and player 2 respectively are: 
+
+ans =
+
+   -0.0448   -0.0448
+
+They are equal as expected!
+</pre>
+</div>
+</body>
+</html>

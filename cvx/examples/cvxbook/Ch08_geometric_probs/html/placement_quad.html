@@ -1,0 +1,214 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Figure 8.16: Quadratic placement problem</title>
+<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/cvxbook/Ch08_geometric_probs/html/placement_quad.html">
+<link rel="stylesheet" href="../../../examples.css" type="text/css">
+</head>
+<body>
+<div id="header">
+<h1>Figure 8.16: Quadratic placement problem</h1>
+Jump to:&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#source">Source code</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#output">Text output</a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#plots">Plots</a>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../../../index.html">Library index</a>
+</div>
+<div id="content">
+<a id="source"></a>
+<pre class="codeinput">
+<span class="comment">% Section 8.7.3, Boyd &amp; Vandenberghe "Convex Optimization"</span>
+<span class="comment">% Original by Lieven Vandenberghe</span>
+<span class="comment">% Adapted for CVX by Joelle Skaf - 10/24/05</span>
+<span class="comment">% (a figure is generated)</span>
+<span class="comment">%</span>
+<span class="comment">% Placement problem with 6 free points, 8 fixed points and 27 links.</span>
+<span class="comment">% The coordinates of the free points minimize the sum of the squares of</span>
+<span class="comment">% Euclidean lengths of the links, i.e.</span>
+<span class="comment">%           minimize    sum_{i&lt;j) h(||x_i - x_j||)</span>
+<span class="comment">% where h(z) = z^2.</span>
+
+linewidth = 1;      <span class="comment">% in points;  width of dotted lines</span>
+markersize = 5;    <span class="comment">% in points;  marker size</span>
+
+<span class="comment">% Input data</span>
+fixed = [ 1   1  -1 -1    1   -1  -0.2  0.1; <span class="comment">% coordinates of fixed points</span>
+          1  -1  -1  1 -0.5 -0.2    -1    1]';
+M = size(fixed,1);  <span class="comment">% number of fixed points</span>
+N = 6;              <span class="comment">% number of free points</span>
+
+<span class="comment">% first N columns of A correspond to free points,</span>
+<span class="comment">% last M columns correspond to fixed points</span>
+
+A = [ 1  0  0 -1  0  0    0  0  0  0  0  0  0  0
+      1  0 -1  0  0  0    0  0  0  0  0  0  0  0
+      1  0  0  0 -1  0    0  0  0  0  0  0  0  0
+      1  0  0  0  0  0   -1  0  0  0  0  0  0  0
+      1  0  0  0  0  0    0 -1  0  0  0  0  0  0
+      1  0  0  0  0  0    0  0  0  0 -1  0  0  0
+      1  0  0  0  0  0    0  0  0  0  0  0  0 -1
+      0  1 -1  0  0  0    0  0  0  0  0  0  0  0
+      0  1  0 -1  0  0    0  0  0  0  0  0  0  0
+      0  1  0  0  0 -1    0  0  0  0  0  0  0  0
+      0  1  0  0  0  0    0 -1  0  0  0  0  0  0
+      0  1  0  0  0  0    0  0 -1  0  0  0  0  0
+      0  1  0  0  0  0    0  0  0  0  0  0 -1  0
+      0  0  1 -1  0  0    0  0  0  0  0  0  0  0
+      0  0  1  0  0  0    0 -1  0  0  0  0  0  0
+      0  0  1  0  0  0    0  0  0  0 -1  0  0  0
+      0  0  0  1 -1  0    0  0  0  0  0  0  0  0
+      0  0  0  1  0  0    0  0 -1  0  0  0  0  0
+      0  0  0  1  0  0    0  0  0 -1  0  0  0  0
+      0  0  0  1  0  0    0  0  0  0  0 -1  0  0
+      0  0  0  1  0 -1    0  0  0  0  0 -1  0  0        <span class="comment">% error in data!!!</span>
+      0  0  0  0  1 -1    0  0  0  0  0  0  0  0
+      0  0  0  0  1  0   -1  0  0  0  0  0  0  0
+      0  0  0  0  1  0    0  0  0 -1  0  0  0  0
+      0  0  0  0  1  0    0  0  0  0  0  0  0 -1
+      0  0  0  0  0  1    0  0 -1  0  0  0  0  0
+      0  0  0  0  0  1    0  0  0  0 -1  0  0  0 ];
+nolinks = size(A,1);    <span class="comment">% number of links</span>
+
+fprintf(1,<span class="string">'Computing the optimal locations of the 6 free points...'</span>);
+
+cvx_begin
+    variable <span class="string">x(N+M,2)</span>
+    minimize ( sum(square_pos(norms( A*x,2,2 ))))
+    x(N+[1:M],:) == fixed;
+cvx_end
+
+fprintf(1,<span class="string">'Done! \n'</span>);
+
+<span class="comment">% Plots</span>
+free_sum = x(1:N,:);
+figure(1);
+dots = plot(free_sum(:,1), free_sum(:,2), <span class="string">'or'</span>, fixed(:,1), fixed(:,2), <span class="string">'bs'</span>);
+set(dots(1),<span class="string">'MarkerFaceColor'</span>,<span class="string">'red'</span>);
+hold <span class="string">on</span>
+legend(<span class="string">'Free points'</span>,<span class="string">'Fixed points'</span>,<span class="string">'Location'</span>,<span class="string">'Best'</span>);
+<span class="keyword">for</span> i=1:nolinks
+  ind = find(A(i,:));
+  line2 = plot(x(ind,1), x(ind,2), <span class="string">':k'</span>);
+  hold <span class="string">on</span>
+  set(line2,<span class="string">'LineWidth'</span>,linewidth);
+<span class="keyword">end</span>
+axis([-1.1 1.1 -1.1 1.1]) ;
+axis <span class="string">equal</span>;
+title(<span class="string">'Quadratic placement problem'</span>);
+<span class="comment">% print -deps placement-quadr.eps</span>
+
+figure(2)
+all = [free_sum; fixed];
+bins = 0.05:0.1:1.95;
+lengths = sqrt(sum((A*all).^2')');
+[N2,hist2] = hist(lengths,bins);
+bar(hist2,N2);
+hold <span class="string">on</span>;
+xx = linspace(0,2,1000); yy = (4/1.5^2)*xx.^2;
+plot(xx,yy,<span class="string">'--'</span>);
+axis([0 1.5 0 4.5]);
+hold <span class="string">on</span>
+plot([0 2], [0 0 ], <span class="string">'k-'</span>);
+title(<span class="string">'Distribution of the 27 link lengths'</span>);
+<span class="comment">% print -deps placement-quadr-hist.eps</span>
+</pre>
+<a id="output"></a>
+<pre class="codeoutput">
+Computing the optimal locations of the 6 free points... 
+Calling Mosek 9.1.9: 216 variables, 96 equality constraints
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 96              
+  Cones                  : 54              
+  Scalar variables       : 216             
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 2                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 96              
+  Cones                  : 54              
+  Scalar variables       : 216             
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 69
+Optimizer  - Cones                  : 54
+Optimizer  - Scalar variables       : 189               conic                  : 162             
+Optimizer  - Semi-definite variables: 0                 scalarized             : 0               
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 466               after factor           : 514             
+Factor     - dense dim.             : 0                 flops                  : 6.77e+03        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   2.0e+00  1.0e+00  4.1e+01  0.00e+00   2.700000000e+01   -1.350000000e+01  1.0e+00  0.00  
+1   6.0e-01  3.0e-01  9.5e+00  -6.79e-02  1.794763772e+01   9.450542230e-01   3.0e-01  0.01  
+2   1.1e-01  5.7e-02  1.2e+00  3.43e-01   1.912476210e+01   1.463104251e+01   5.7e-02  0.01  
+3   1.9e-02  9.3e-03  8.3e-02  7.94e-01   2.030768716e+01   1.950599508e+01   9.3e-03  0.01  
+4   1.5e-03  7.5e-04  1.9e-03  9.61e-01   2.053123076e+01   2.046561850e+01   7.5e-04  0.01  
+5   7.8e-05  3.9e-05  2.3e-05  9.98e-01   2.054647216e+01   2.054302559e+01   3.9e-05  0.01  
+6   1.4e-06  6.9e-07  5.3e-08  1.00e+00   2.054729631e+01   2.054723586e+01   6.9e-07  0.01  
+7   8.4e-08  4.2e-08  8.0e-10  1.00e+00   2.054731243e+01   2.054730873e+01   4.2e-08  0.01  
+8   4.6e-09  2.3e-09  1.0e-11  1.00e+00   2.054731354e+01   2.054731333e+01   2.3e-09  0.01  
+Optimizer terminated. Time: 0.02    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: 2.0547313535e+01    nrm: 2e+00    Viol.  con: 1e-08    var: 2e-09    cones: 0e+00  
+  Dual.    obj: 2.0547313333e+01    nrm: 3e+00    Viol.  con: 0e+00    var: 4e-09    cones: 0e+00  
+Optimizer summary
+  Optimizer                 -                        time: 0.02    
+    Interior-point          - iterations : 8         time: 0.01    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): +20.5473
+ 
+Done! 
+</pre>
+<a id="plots"></a>
+<div id="plotoutput">
+<img src="placement_quad__01.png" alt=""> <img src="placement_quad__02.png" alt=""> 
+</div>
+</div>
+</body>
+</html>

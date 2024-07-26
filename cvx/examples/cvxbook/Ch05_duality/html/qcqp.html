@@ -1,0 +1,160 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Section 5.2.4: Solves a simple QCQP</title>
+<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/cvxbook/Ch05_duality/html/qcqp.html">
+<link rel="stylesheet" href="../../../examples.css" type="text/css">
+</head>
+<body>
+<div id="header">
+<h1>Section 5.2.4: Solves a simple QCQP</h1>
+Jump to:&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#source">Source code</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#output">Text output</a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+Plots
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../../../index.html">Library index</a>
+</div>
+<div id="content">
+<a id="source"></a>
+<pre class="codeinput">
+<span class="comment">% Boyd &amp; Vandenberghe, "Convex Optimization"</span>
+<span class="comment">% Jo&euml;lle Skaf - 08/23/05</span>
+<span class="comment">%</span>
+<span class="comment">% Solved a QCQP with 3 inequalities:</span>
+<span class="comment">%           minimize    1/2 x'*P0*x + q0'*r + r0</span>
+<span class="comment">%               s.t.    1/2 x'*Pi*x + qi'*r + ri &lt;= 0   for i=1,2,3</span>
+<span class="comment">% and verifies that strong duality holds.</span>
+
+<span class="comment">% Input data</span>
+randn(<span class="string">'state'</span>,13);
+n = 6;
+P0 = randn(n); P0 = P0'*P0 + eps*eye(n);
+P1 = randn(n); P1 = P1'*P1;
+P2 = randn(n); P2 = P2'*P2;
+P3 = randn(n); P3 = P3'*P3;
+q0 = randn(n,1); q1 = randn(n,1); q2 = randn(n,1); q3 = randn(n,1);
+r0 = randn(1); r1 = randn(1); r2 = randn(1); r3 = randn(1);
+
+fprintf(1,<span class="string">'Computing the optimal value of the QCQP and its dual... '</span>);
+
+cvx_begin
+    variable <span class="string">x(n)</span>
+    dual <span class="string">variables</span> <span class="string">lam1</span> <span class="string">lam2</span> <span class="string">lam3</span>
+    minimize( 0.5*quad_form(x,P0) + q0'*x + r0 )
+    lam1: 0.5*quad_form(x,P1) + q1'*x + r1 &lt;= 0;
+    lam2: 0.5*quad_form(x,P2) + q2'*x + r2 &lt;= 0;
+    lam3: 0.5*quad_form(x,P3) + q3'*x + r3 &lt;= 0;
+cvx_end
+
+obj1 = cvx_optval;
+P_lam = P0 + lam1*P1 + lam2*P2 + lam3*P3;
+q_lam = q0 + lam1*q1 + lam2*q2 + lam3*q3;
+r_lam = r0 + lam1*r1 + lam2*r2 + lam3*r3;
+obj2 = -0.5*q_lam'*inv(P_lam)*q_lam + r_lam;
+
+fprintf(1,<span class="string">'Done! \n'</span>);
+
+<span class="comment">% Displaying results</span>
+disp(<span class="string">'------------------------------------------------------------------------'</span>);
+disp(<span class="string">'The duality gap is equal to '</span>);
+disp(obj1-obj2)
+</pre>
+<a id="output"></a>
+<pre class="codeoutput">
+Computing the optimal value of the QCQP and its dual...  
+Calling Mosek 9.1.9: 35 variables, 10 equality constraints
+   For improved efficiency, Mosek is solving the dual problem.
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 10              
+  Cones                  : 4               
+  Scalar variables       : 35              
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 10              
+  Cones                  : 4               
+  Scalar variables       : 35              
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 10
+Optimizer  - Cones                  : 4
+Optimizer  - Scalar variables       : 35                conic                  : 32              
+Optimizer  - Semi-definite variables: 0                 scalarized             : 0               
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 49                after factor           : 55              
+Factor     - dense dim.             : 0                 flops                  : 1.25e+03        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   5.6e+00  5.0e+00  1.0e+00  0.00e+00   0.000000000e+00   0.000000000e+00   1.0e+00  0.00  
+1   1.8e+00  1.6e+00  3.6e-01  -5.80e-01  9.950141487e-02   7.175750246e-01   3.3e-01  0.01  
+2   4.3e-01  3.8e-01  3.8e-02  7.42e-01   -2.392908578e+00  -2.297090534e+00  7.7e-02  0.01  
+3   5.3e-02  4.7e-02  1.8e-03  8.74e-01   -3.035369662e+00  -3.018245201e+00  9.5e-03  0.01  
+4   1.4e-02  1.2e-02  2.5e-04  9.53e-01   -3.163983578e+00  -3.158419311e+00  2.4e-03  0.01  
+5   2.2e-03  2.0e-03  1.9e-05  8.95e-01   -3.217054679e+00  -3.215643247e+00  3.9e-04  0.01  
+6   2.0e-05  1.8e-05  1.5e-08  1.00e+00   -3.225854306e+00  -3.225843854e+00  3.6e-06  0.01  
+7   2.0e-06  1.8e-06  4.9e-10  1.00e+00   -3.225929324e+00  -3.225928277e+00  3.6e-07  0.01  
+8   1.6e-07  1.4e-07  1.1e-11  1.00e+00   -3.225937738e+00  -3.225937655e+00  2.8e-08  0.01  
+9   1.9e-08  1.7e-08  4.4e-13  1.00e+00   -3.225938379e+00  -3.225938370e+00  3.3e-09  0.01  
+Optimizer terminated. Time: 0.01    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: -3.2259383795e+00   nrm: 7e+00    Viol.  con: 4e-08    var: 0e+00    cones: 0e+00  
+  Dual.    obj: -3.2259383698e+00   nrm: 7e-01    Viol.  con: 0e+00    var: 4e-08    cones: 0e+00  
+Optimizer summary
+  Optimizer                 -                        time: 0.01    
+    Interior-point          - iterations : 9         time: 0.01    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): -0.895296
+ 
+Done! 
+------------------------------------------------------------------------
+The duality gap is equal to 
+  -5.8546e-08
+
+</pre>
+</div>
+</body>
+</html>

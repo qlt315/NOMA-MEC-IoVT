@@ -1,0 +1,180 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Finding a point that satisfies many linear inequalities</title>
+<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/sparse_heuristics/html/sparse_infeas.html">
+<link rel="stylesheet" href="../../examples.css" type="text/css">
+</head>
+<body>
+<div id="header">
+<h1>Finding a point that satisfies many linear inequalities</h1>
+Jump to:&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#source">Source code</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#output">Text output</a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+Plots
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../../index.html">Library index</a>
+</div>
+<div id="content">
+<a id="source"></a>
+<pre class="codeinput">
+<span class="comment">% Section 11.4.1, Boyd &amp; Vandenberghe "Convex Optimization"</span>
+<span class="comment">% Written for CVX by Almir Mutapcic - 02/18/06</span>
+<span class="comment">%</span>
+<span class="comment">% We consider a set of linear inequalities A*x &lt;= b which are</span>
+<span class="comment">% infeasible. Here A is a matrix in R^(m-by-n) and b belongs</span>
+<span class="comment">% to R^m. We apply a heuristic to find a point x that violates</span>
+<span class="comment">% only a small number of inequalities.</span>
+<span class="comment">%</span>
+<span class="comment">% We use the sum of infeasibilities heuristic:</span>
+<span class="comment">%</span>
+<span class="comment">%   minimize   sum( max( Ax - b ) )</span>
+<span class="comment">%</span>
+<span class="comment">% which is equivalent to the following LP (book pg. 580):</span>
+<span class="comment">%</span>
+<span class="comment">%   minimize   sum( s )</span>
+<span class="comment">%       s.t.   Ax &lt;= b + s</span>
+<span class="comment">%              s &gt;= 0</span>
+<span class="comment">%</span>
+<span class="comment">% with variables x in R^n and s in R^m.</span>
+
+<span class="comment">% problem dimensions (m inequalities in n-dimensional space)</span>
+m = 150;
+n = 10;
+
+<span class="comment">% fix random number generator so we can repeat the experiment</span>
+seed = 0;
+randn(<span class="string">'state'</span>,seed);
+
+<span class="comment">% construct infeasible inequalities</span>
+A = randn(m,n);
+b = randn(m,1);
+
+fprintf(1, [<span class="string">'Starting with an infeasible set of %d inequalities '</span> <span class="keyword">...</span>
+            <span class="string">'in %d variables.\n'</span>],m,n);
+
+<span class="comment">% sum of infeasibilities heuristic</span>
+cvx_begin
+   variable <span class="string">x(n)</span>
+   minimize( sum( max( A*x - b, 0 ) ) )
+cvx_end
+
+<span class="comment">% full LP version of the sum of infeasibilities heuristic</span>
+<span class="comment">% cvx_begin</span>
+<span class="comment">%   variables x(n) s(m)</span>
+<span class="comment">%   minimize( sum( s ) )</span>
+<span class="comment">%   subject to</span>
+<span class="comment">%     A*x &lt;= b + s;</span>
+<span class="comment">%     s &gt;= 0;</span>
+<span class="comment">% cvx_end</span>
+
+<span class="comment">% number of satisfied inequalities</span>
+nv = length( find( A*x &gt; b ) );
+fprintf(1,<span class="string">'\nFound an x that violates %d out of %d inequalities.\n'</span>,nv,m);
+</pre>
+<a id="output"></a>
+<pre class="codeoutput">
+Starting with an infeasible set of 150 inequalities in 10 variables.
+ 
+Calling Mosek 9.1.9: 310 variables, 150 equality constraints
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : LO (linear optimization problem)
+  Constraints            : 150             
+  Cones                  : 0               
+  Scalar variables       : 310             
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : LO (linear optimization problem)
+  Constraints            : 150             
+  Cones                  : 0               
+  Scalar variables       : 310             
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the dual        
+Optimizer  - Constraints            : 10
+Optimizer  - Cones                  : 0
+Optimizer  - Scalar variables       : 150               conic                  : 0               
+Optimizer  - Semi-definite variables: 0                 scalarized             : 0               
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 55                after factor           : 55              
+Factor     - dense dim.             : 0                 flops                  : 1.69e+04        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   1.2e+01  2.8e+01  9.5e+01  0.00e+00   0.000000000e+00   -3.226946936e+01  8.1e+00  0.00  
+1   2.2e+00  5.4e+00  1.8e+01  8.52e-01   3.172284918e+01   2.579425457e+01   1.6e+00  0.01  
+2   3.6e-01  8.7e-01  3.0e+00  1.04e+00   3.721624826e+01   3.626522466e+01   2.5e-01  0.01  
+3   7.2e-02  1.7e-01  5.9e-01  9.93e-01   3.855781259e+01   3.836666385e+01   5.1e-02  0.01  
+4   8.0e-03  1.9e-02  6.5e-02  9.96e-01   3.887732250e+01   3.885616107e+01   5.6e-03  0.01  
+5   9.6e-04  2.3e-03  7.9e-03  1.00e+00   3.891202591e+01   3.890947834e+01   6.7e-04  0.01  
+6   6.3e-05  1.5e-04  5.1e-04  1.00e+00   3.891634738e+01   3.891618213e+01   4.4e-05  0.01  
+7   1.9e-06  4.5e-06  1.5e-05  1.00e+00   3.891675726e+01   3.891675238e+01   1.3e-06  0.01  
+8   1.9e-10  4.6e-10  1.6e-09  1.00e+00   3.891676296e+01   3.891676296e+01   1.3e-10  0.01  
+Basis identification started.
+Primal basis identification phase started.
+Primal basis identification phase terminated. Time: 0.00
+Dual basis identification phase started.
+Dual basis identification phase terminated. Time: 0.00
+Basis identification terminated. Time: 0.00
+Optimizer terminated. Time: 0.02    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: 3.8916762961e+01    nrm: 3e+00    Viol.  con: 5e-11    var: 0e+00  
+  Dual.    obj: 3.8916762958e+01    nrm: 1e+00    Viol.  con: 0e+00    var: 4e-10  
+
+Basic solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: 3.8916762954e+01    nrm: 3e+00    Viol.  con: 5e-09    var: 0e+00  
+  Dual.    obj: 3.8916762959e+01    nrm: 1e+00    Viol.  con: 0e+00    var: 3e-15  
+Optimizer summary
+  Optimizer                 -                        time: 0.02    
+    Interior-point          - iterations : 8         time: 0.01    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): +38.9168
+ 
+
+Found an x that violates 57 out of 150 inequalities.
+</pre>
+</div>
+</body>
+</html>

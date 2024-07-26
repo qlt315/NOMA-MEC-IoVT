@@ -1,0 +1,156 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>One free point localization</title>
+<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/cvxbook/Ch08_geometric_probs/html/ex_8_5.html">
+<link rel="stylesheet" href="../../../examples.css" type="text/css">
+</head>
+<body>
+<div id="header">
+<h1>One free point localization</h1>
+Jump to:&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#source">Source code</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#output">Text output</a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+Plots
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../../../index.html">Library index</a>
+</div>
+<div id="content">
+<a id="source"></a>
+<pre class="codeinput">
+<span class="comment">% Section 8.7.3, Boyd &amp; Vandenberghe "Convex Optimization"</span>
+<span class="comment">% Joelle Skaf - 10/24/05</span>
+<span class="comment">%</span>
+<span class="comment">% K fixed points x_1,...,x_K in R^2 are given and the goal is to place</span>
+<span class="comment">% one additional point x such that the sum of the squares of the</span>
+<span class="comment">% Euclidean distances to fixed points is minimized:</span>
+<span class="comment">%           minimize    sum_{i=1}^K  ||x - x_i||^2</span>
+<span class="comment">% The optimal point is the average of the given fixed points</span>
+
+<span class="comment">% Data generation</span>
+n = 2;
+K = 11;
+randn(<span class="string">'state'</span>,0);
+P = randn(n,K);
+
+<span class="comment">% minimizing the sum of Euclidean distance</span>
+fprintf(1,<span class="string">'Minimizing the sum of the squares the distances to fixed points...'</span>);
+
+cvx_begin
+    variable <span class="string">x(2)</span>
+    minimize ( sum( square_pos( norms(x*ones(1,K) - P,2) ) ) )
+cvx_end
+
+fprintf(1,<span class="string">'Done! \n'</span>);
+
+<span class="comment">% Displaying results</span>
+disp(<span class="string">'------------------------------------------------------------------'</span>);
+disp(<span class="string">'The optimal point location is: '</span>);
+disp(x);
+disp(<span class="string">'The average location of the fixed points is'</span>);
+disp(sum(P,2)/K);
+disp(<span class="string">'They are the same as expected!'</span>);
+</pre>
+<a id="output"></a>
+<pre class="codeoutput">
+Minimizing the sum of the squares the distances to fixed points... 
+Calling Mosek 9.1.9: 88 variables, 42 equality constraints
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 42              
+  Cones                  : 22              
+  Scalar variables       : 88              
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 42              
+  Cones                  : 22              
+  Scalar variables       : 88              
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the dual        
+Optimizer  - Constraints            : 13
+Optimizer  - Cones                  : 22
+Optimizer  - Scalar variables       : 66                conic                  : 66              
+Optimizer  - Semi-definite variables: 0                 scalarized             : 0               
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 36                after factor           : 36              
+Factor     - dense dim.             : 0                 flops                  : 3.57e+02        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   3.8e+00  1.0e+00  1.8e+01  0.00e+00   1.100000000e+01   -5.500000000e+00  1.0e+00  0.00  
+1   1.1e+00  2.7e-01  4.6e+00  -2.25e-01  9.166369810e+00   1.638467495e+00   2.7e-01  0.01  
+2   5.2e-01  1.4e-01  2.1e+00  1.36e-01   1.200674463e+01   7.093667824e+00   1.4e-01  0.01  
+3   1.0e-01  2.6e-02  2.2e-01  5.00e-01   1.516340210e+01   1.400919613e+01   2.6e-02  0.01  
+4   2.0e-02  5.2e-03  2.1e-02  8.19e-01   1.636949296e+01   1.612187949e+01   5.2e-03  0.01  
+5   1.5e-03  4.0e-04  4.5e-04  9.75e-01   1.665856181e+01   1.663945581e+01   4.0e-04  0.01  
+6   2.6e-05  6.7e-06  9.9e-07  9.99e-01   1.668267187e+01   1.668234611e+01   6.7e-06  0.01  
+7   1.6e-06  4.1e-07  1.5e-08  1.00e+00   1.668308885e+01   1.668306879e+01   4.1e-07  0.01  
+8   4.9e-08  1.3e-08  8.1e-11  1.00e+00   1.668311786e+01   1.668311725e+01   1.3e-08  0.01  
+9   1.7e-09  4.4e-10  5.2e-13  1.00e+00   1.668311882e+01   1.668311880e+01   4.4e-10  0.01  
+Optimizer terminated. Time: 0.01    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: 1.6683118820e+01    nrm: 4e+00    Viol.  con: 0e+00    var: 0e+00    cones: 4e-09  
+  Dual.    obj: 1.6683118799e+01    nrm: 7e+00    Viol.  con: 0e+00    var: 3e-12    cones: 0e+00  
+Optimizer summary
+  Optimizer                 -                        time: 0.01    
+    Interior-point          - iterations : 9         time: 0.01    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): +16.6831
+ 
+Done! 
+------------------------------------------------------------------
+The optimal point location is: 
+    0.0379
+    0.0785
+
+The average location of the fixed points is
+    0.0379
+    0.0785
+
+They are the same as expected!
+</pre>
+</div>
+</body>
+</html>

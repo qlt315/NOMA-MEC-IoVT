@@ -1,0 +1,158 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Section 7.1.1: Covariance estimation for Gaussian variables</title>
+<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/cvxbook/Ch07_statistical_estim/html/ML_covariance_est.html">
+<link rel="stylesheet" href="../../../examples.css" type="text/css">
+</head>
+<body>
+<div id="header">
+<h1>Section 7.1.1: Covariance estimation for Gaussian variables</h1>
+Jump to:&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#source">Source code</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#output">Text output</a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+Plots
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../../../index.html">Library index</a>
+</div>
+<div id="content">
+<a id="source"></a>
+<pre class="codeinput">
+<span class="comment">% Boyd &amp; Vandenberghe "Convex Optimization"</span>
+<span class="comment">% Jo&Atilde;&laquo;lle Skaf - 04/24/08</span>
+<span class="comment">%</span>
+<span class="comment">% Suppose y \in\reals^n is a Gaussian random variable with zero mean and</span>
+<span class="comment">% covariance matrix R = \Expect(yy^T). We want to estimate the covariance</span>
+<span class="comment">% matrix R based on N independent samples y1,...,yN drawn from the</span>
+<span class="comment">% distribution, and using prior knowledge about R (lower and upper bounds</span>
+<span class="comment">% on R)</span>
+<span class="comment">%           L &lt;= R &lt;= U</span>
+<span class="comment">% Let S be R^{-1}. The maximum likelihood (ML) estimate of S is found</span>
+<span class="comment">% by solving the problem</span>
+<span class="comment">%           maximize    logdet(S) - tr(SY)</span>
+<span class="comment">%           subject to  U^{-1} &lt;= S &lt;= L^{-1}</span>
+<span class="comment">% where Y is the sample covariance of y1,...,yN.</span>
+
+<span class="comment">% Input data</span>
+randn(<span class="string">'state'</span>,0);
+n = 10;
+N = 1000;
+tmp = randn(n);
+L = tmp*tmp';
+tmp = randn(n);
+U = L + tmp*tmp';
+R = (L+U)/2;
+y_sample = sqrtm(R)*randn(n,N);
+Y = cov(y_sample');
+Ui = inv(U); Ui = 0.5*(Ui+Ui');
+Li = inv(L); Li = 0.5*(Li+Li');
+
+<span class="comment">% Maximum likelihood estimate of R^{-1}</span>
+cvx_begin <span class="string">sdp</span>
+    variable <span class="string">S(n,n)</span> <span class="string">symmetric</span>
+    maximize( log_det(S) - trace(S*Y) );
+    S &gt;= Ui;
+    S &lt;= Li;
+cvx_end
+R_hat = inv(S);
+</pre>
+<a id="output"></a>
+<pre class="codeoutput">
+ 
+Calling Mosek 9.1.9: 357 variables, 123 equality constraints
+   For improved efficiency, Mosek is solving the dual problem.
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 123             
+  Cones                  : 12              
+  Scalar variables       : 37              
+  Matrix variables       : 3               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 123             
+  Cones                  : 12              
+  Scalar variables       : 37              
+  Matrix variables       : 3               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 121
+Optimizer  - Cones                  : 12
+Optimizer  - Scalar variables       : 36                conic                  : 36              
+Optimizer  - Semi-definite variables: 3                 scalarized             : 320             
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 6142              after factor           : 6168            
+Factor     - dense dim.             : 0                 flops                  : 5.30e+05        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   2.3e+01  1.8e+01  4.5e+01  0.00e+00   3.566235231e+01   -8.051020016e+00  1.0e+00  0.00  
+1   6.4e+00  5.0e+00  2.1e+01  -8.78e-01  2.394570507e+01   -1.097749160e+01  2.8e-01  0.01  
+2   2.1e+00  1.6e+00  6.5e+00  -3.90e-01  2.827371478e+01   1.029159494e+01   9.1e-02  0.01  
+3   7.8e-01  6.1e-01  1.7e+00  4.38e-01   9.042150034e+00   1.059328974e+00   3.5e-02  0.01  
+4   3.8e-01  3.0e-01  5.7e-01  8.84e-01   -2.957770892e-03  -3.997259351e+00  1.7e-02  0.01  
+5   2.9e-01  2.3e-01  4.6e-01  4.91e-01   -4.618648356e+00  -8.302953751e+00  1.3e-02  0.02  
+6   1.1e-01  8.9e-02  9.4e-02  9.65e-01   -1.142492679e+01  -1.279830916e+01  5.1e-03  0.02  
+7   5.5e-02  4.3e-02  4.9e-02  3.92e-01   -1.711377817e+01  -1.807675725e+01  2.4e-03  0.02  
+8   1.3e-02  1.0e-02  5.4e-03  9.38e-01   -2.065061243e+01  -2.087796149e+01  5.7e-04  0.02  
+9   5.7e-03  4.4e-03  1.9e-03  6.74e-01   -2.207033693e+01  -2.218369709e+01  2.5e-04  0.02  
+10  8.1e-04  6.3e-04  1.1e-04  8.99e-01   -2.309355553e+01  -2.311041093e+01  3.6e-05  0.02  
+11  1.2e-04  9.4e-05  6.2e-06  1.00e+00   -2.325715332e+01  -2.325965119e+01  5.3e-06  0.02  
+12  2.0e-05  1.6e-05  4.2e-07  1.00e+00   -2.328108678e+01  -2.328149911e+01  8.9e-07  0.02  
+13  2.7e-06  2.1e-06  2.2e-08  1.00e+00   -2.328509655e+01  -2.328515061e+01  1.2e-07  0.03  
+14  2.8e-07  2.2e-07  7.4e-10  1.00e+00   -2.328568644e+01  -2.328569204e+01  1.2e-08  0.03  
+15  3.0e-08  2.3e-08  2.5e-11  1.00e+00   -2.328574902e+01  -2.328574961e+01  1.3e-09  0.03  
+16  3.6e-09  2.8e-09  1.1e-12  1.00e+00   -2.328575561e+01  -2.328575569e+01  1.6e-10  0.03  
+Optimizer terminated. Time: 0.03    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: -2.3285755615e+01   nrm: 2e+02    Viol.  con: 5e-08    var: 0e+00    barvar: 0e+00    cones: 0e+00  
+  Dual.    obj: -2.3285755686e+01   nrm: 2e+01    Viol.  con: 0e+00    var: 1e-12    barvar: 4e-08    cones: 0e+00  
+Optimizer summary
+  Optimizer                 -                        time: 0.03    
+    Interior-point          - iterations : 16        time: 0.03    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): -30.6698
+ 
+</pre>
+</div>
+</body>
+</html>

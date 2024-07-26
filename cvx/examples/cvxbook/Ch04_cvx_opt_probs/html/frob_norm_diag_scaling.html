@@ -1,0 +1,162 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Section 4.5.4: Frobenius norm diagonal scaling (GP)</title>
+<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/cvxbook/Ch04_cvx_opt_probs/html/frob_norm_diag_scaling.html">
+<link rel="stylesheet" href="../../../examples.css" type="text/css">
+</head>
+<body>
+<div id="header">
+<h1>Section 4.5.4: Frobenius norm diagonal scaling (GP)</h1>
+Jump to:&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#source">Source code</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#output">Text output</a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+Plots
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../../../index.html">Library index</a>
+</div>
+<div id="content">
+<a id="source"></a>
+<pre class="codeinput">
+<span class="comment">% Boyd &amp; Vandenberghe "Convex Optimization"</span>
+<span class="comment">% Joelle Skaf - 01/29/06</span>
+<span class="comment">% Updated to use GP mode by Almir Mutapcic 02/08/06</span>
+<span class="comment">%</span>
+<span class="comment">% Given a square matrix M, the goal is to find a vector (with dii &gt; 0)</span>
+<span class="comment">% such that ||DMD^{-1}||_F is minimized, where D = diag(d).</span>
+<span class="comment">% The problem can be cast as an unconstrained geometric program:</span>
+<span class="comment">%           minimize sqrt( sum_{i,j=1}^{n} Mij^2*di^2/dj^2 )</span>
+<span class="comment">%</span>
+
+rs = randn( <span class="string">'state'</span> );
+randn( <span class="string">'state'</span>, 0 );
+
+<span class="comment">% matrix size (M is an n-by-n matrix)</span>
+n = 4;
+M = randn(n,n);
+
+<span class="comment">% formulating the problem as a GP</span>
+cvx_begin <span class="string">gp</span>
+  variable <span class="string">d(n)</span>
+  minimize( sqrt( sum( sum( diag(d.^2)*(M.^2)*diag(d.^-2) ) ) ) )
+  <span class="comment">% Alternate formulation: norm( diag(d)*abs(M)*diag(1./d), 'fro' )</span>
+cvx_end
+
+<span class="comment">% displaying results</span>
+D = diag(d);
+disp(<span class="string">'The matrix D that minimizes ||DMD^{-1}||_F is: '</span>);
+disp(D);
+disp(<span class="string">'The minimium Frobenius norm achieved is: '</span>);
+disp(norm(D*M*inv(D),<span class="string">'fro'</span>));
+disp(<span class="string">'while the Frobunius norm of the original matrix M is: '</span>);
+disp(norm(M,<span class="string">'fro'</span>));
+</pre>
+<a id="output"></a>
+<pre class="codeoutput">
+ 
+Calling Mosek 9.1.9: 82 variables, 32 equality constraints
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 32              
+  Cones                  : 16              
+  Scalar variables       : 82              
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 3
+Eliminator terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 2                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 32              
+  Cones                  : 16              
+  Scalar variables       : 82              
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 13
+Optimizer  - Cones                  : 16
+Optimizer  - Scalar variables       : 48                conic                  : 48              
+Optimizer  - Semi-definite variables: 0                 scalarized             : 0               
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 91                after factor           : 91              
+Factor     - dense dim.             : 0                 flops                  : 1.58e+03        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   2.0e+01  1.3e+00  1.4e+01  0.00e+00   4.139191995e-01   -1.288163203e+01  1.0e+00  0.00  
+1   4.3e+00  2.8e-01  3.3e+00  -4.38e-01  1.395618862e+00   -3.815128541e+00  2.2e-01  0.01  
+2   5.6e-01  3.7e-02  1.9e-01  5.20e-01   2.274828194e+00   1.474450895e+00   2.8e-02  0.01  
+3   9.2e-02  6.0e-03  6.3e-03  1.29e+00   2.269999438e+00   2.144594407e+00   4.7e-03  0.01  
+4   2.5e-02  1.6e-03  8.5e-04  1.33e+00   2.072029381e+00   2.042509915e+00   1.3e-03  0.01  
+5   6.1e-03  4.0e-04  1.1e-04  1.11e+00   2.031446660e+00   2.024626030e+00   3.1e-04  0.01  
+6   6.6e-04  4.4e-05  4.0e-06  1.02e+00   2.018278526e+00   2.017546513e+00   3.4e-05  0.01  
+7   7.2e-05  4.7e-06  1.4e-07  1.00e+00   2.017465148e+00   2.017386371e+00   3.6e-06  0.01  
+8   6.5e-06  4.3e-07  3.9e-09  1.00e+00   2.017394509e+00   2.017387325e+00   3.3e-07  0.01  
+9   6.6e-07  4.4e-08  1.3e-10  1.00e+00   2.017388720e+00   2.017387990e+00   3.4e-08  0.01  
+10  9.5e-08  6.2e-09  6.9e-12  1.00e+00   2.017388192e+00   2.017388088e+00   4.8e-09  0.01  
+11  1.2e-08  7.7e-10  3.0e-13  1.00e+00   2.017388117e+00   2.017388104e+00   5.9e-10  0.01  
+Optimizer terminated. Time: 0.02    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: 2.0173881172e+00    nrm: 8e+00    Viol.  con: 2e-08    var: 0e+00    cones: 5e-12  
+  Dual.    obj: 2.0173881043e+00    nrm: 1e+00    Viol.  con: 0e+00    var: 8e-10    cones: 0e+00  
+Optimizer summary
+  Optimizer                 -                        time: 0.02    
+    Interior-point          - iterations : 11        time: 0.01    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): +3.25231
+ 
+The matrix D that minimizes ||DMD^{-1}||_F is: 
+    1.1912         0         0         0
+         0    1.0000         0         0
+         0         0    1.0674         0
+         0         0         0    1.7831
+
+The minimium Frobenius norm achieved is: 
+    3.2523
+
+while the Frobunius norm of the original matrix M is: 
+    3.6126
+
+</pre>
+</div>
+</body>
+</html>

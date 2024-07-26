@@ -1,0 +1,301 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Example 6.8: Spline fitting</title>
+<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/cvxbook/Ch06_approx_fitting/html/fig6_20.html">
+<link rel="stylesheet" href="../../../examples.css" type="text/css">
+</head>
+<body>
+<div id="header">
+<h1>Example 6.8: Spline fitting</h1>
+Jump to:&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#source">Source code</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#output">Text output</a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#plots">Plots</a>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../../../index.html">Library index</a>
+</div>
+<div id="content">
+<a id="source"></a>
+<pre class="codeinput">
+<span class="comment">% Section 6.5.3, Figure 6.20</span>
+<span class="comment">% Boyd &amp; Vandenberghe "Convex Optimization"</span>
+<span class="comment">% Original by Lieven Vandenberghe</span>
+<span class="comment">% Adapted for CVX by Joelle Skaf - 10/03/05</span>
+<span class="comment">% (a figure is generated)</span>
+<span class="comment">%</span>
+<span class="comment">% Given data u_1,...,u_m and v_1,...,v_m in R, the goal is to fit to the</span>
+<span class="comment">% data piecewise polynomials with maximum degree 3 (with continuous first</span>
+<span class="comment">% and second derivatives).</span>
+<span class="comment">% The [0,1] interval is divided into 3 equal intervals: [-1, -1/3],</span>
+<span class="comment">% [-1/3,1/3], [1/3,1] with the following polynomials defined on each</span>
+<span class="comment">% interval respectively:</span>
+<span class="comment">% p1(t) = x11 + x12*t + x13*t^2 + x14*t^3</span>
+<span class="comment">% p2(t) = x21 + x22*t + x23*t^2 + x24*t^3</span>
+<span class="comment">% p3(t) = x31 + x32*t + x33*t^2 + x34*t^3</span>
+<span class="comment">% L2-norm and Linfty-norm cases are considered</span>
+
+<span class="comment">% Input Data</span>
+n=4;  <span class="comment">% variables per segment</span>
+m=40;
+randn(<span class="string">'state'</span>,0);
+<span class="comment">% generate 50 points ui, vi</span>
+u = linspace(-1,1,m);
+v = 1./(5+40*u.^2) + 0.1*u.^3 + 0.01*randn(1,m);
+
+a = -1/3;  b = 1/3;  <span class="comment">% boundary points</span>
+u1 = u(find(u&lt;a)); m1 = length(u1);
+u2 = u(find((u &gt;= a) &amp; (u&lt;b)));  m2 = length(u2);
+u3 = u(find((u &gt;= b)));  m3 = length(u3);
+
+A1 = vander(u1');   A1 = fliplr(A1(:,m1-n+[1:n]));
+A2 = vander(u2');   A2 = fliplr(A2(:,m2-n+[1:n]));
+A3 = vander(u3');   A3 = fliplr(A3(:,m3-n+[1:n]));
+
+<span class="comment">%L-2 fit</span>
+fprintf(1,<span class="string">'Computing splines in the case of L2-norm...'</span>);
+
+cvx_begin
+    variables <span class="string">x1(n)</span> <span class="string">x2(n)</span> <span class="string">x3(n)</span>
+    minimize ( norm( [A1*x1;A2*x2;A3*x3] - v') )
+    <span class="comment">%continuity conditions at point a</span>
+    [1 a a^2   a^3]*x1 == [1 a a^2   a^3]*x2;
+    [0 1 2*a 3*a^2]*x1 == [0 1 2*a 3*a^2]*x2;
+    [0 0   2 6*a  ]*x1 == [0 0   2 6*a  ]*x2;
+    <span class="comment">%continuity conditions at point b</span>
+    [1 b b^2   b^3]*x2 == [1 b b^2   b^3]*x3;
+    [0 1 2*b 3*b^2]*x2 == [0 1 2*b 3*b^2]*x3;
+    [0 0   2 6*b  ]*x2 == [0 0   2 6*b  ]*x3;
+cvx_end
+
+fprintf(1,<span class="string">'Done! \n'</span>);
+
+<span class="comment">% L-infty fit</span>
+fprintf(1,<span class="string">'Computing splines in the case of Linfty-norm...'</span>);
+
+cvx_begin
+    variables <span class="string">xl1(n)</span> <span class="string">xl2(n)</span> <span class="string">xl3(n)</span>
+    minimize ( norm( [A1*xl1;A2*xl2;A3*xl3] - v', inf) )
+    <span class="comment">%continuity conditions at point a</span>
+    [1 a a^2   a^3]*xl1 == [1 a a^2   a^3]*xl2;
+    [0 1 2*a 3*a^2]*xl1 == [0 1 2*a 3*a^2]*xl2;
+    [0 0   2 6*a  ]*xl1 == [0 0   2 6*a  ]*xl2;
+    <span class="comment">%continuity conditions at point b</span>
+    [1 b b^2   b^3]*xl2 == [1 b b^2   b^3]*xl3;
+    [0 1 2*b 3*b^2]*xl2 == [0 1 2*b 3*b^2]*xl3;
+    [0 0   2 6*b  ]*xl2 == [0 0   2 6*b  ]*xl3;
+cvx_end
+
+fprintf(1,<span class="string">'Done! \n'</span>);
+
+<span class="comment">% evaluate the interpolating polynomials using Horner's method</span>
+u1s = linspace(-1.0,a,1000)';
+p1 = x1(1) + x1(2)*u1s + x1(3)*u1s.^2 + x1(4).*u1s.^3;
+p1l1 = xl1(1) + xl1(2)*u1s + xl1(3)*u1s.^2 + xl1(4).*u1s.^3;
+
+u2s = linspace(a,b,1000)';
+p2 = x2(1) + x2(2)*u2s + x2(3)*u2s.^2 + x2(4).*u2s.^3;
+p2l1 = xl2(1) + xl2(2)*u2s + xl2(3)*u2s.^2 + xl2(4).*u2s.^3;
+
+u3s = linspace(b,1.0,1000)';
+p3 = x3(1) + x3(2)*u3s + x3(3)*u3s.^2 + x3(4).*u3s.^3;
+p3l1 = xl3(1) + xl3(2)*u3s + xl3(3)*u3s.^2 + xl3(4).*u3s.^3;
+
+us = [u1s;u2s;u3s];
+p = [p1;p2;p3];
+pl = [p1l1;p2l1;p3l1];
+<span class="comment">% plot function and cubic splines</span>
+d = plot(us,p,<span class="string">'b-'</span>,u,v,<span class="string">'go'</span>, us,pl,<span class="string">'r--'</span>,<span class="keyword">...</span>
+         [-1 -1], [-0.1 0.25], <span class="string">'k--'</span>, [1 1], [-0.1 0.25], <span class="string">'k--'</span>, <span class="keyword">...</span>
+         [a a], [-0.1 0.25], <span class="string">'k--'</span>, [b b], [-0.1 0.25], <span class="string">'k--'</span>);
+
+title(<span class="string">'Approximation using 2 cubic splines'</span>);
+xlabel(<span class="string">'u'</span>);
+ylabel(<span class="string">'f(u)'</span>);
+legend(<span class="string">'L_2 norm'</span>,<span class="string">'Data points'</span>,<span class="string">'L_{\infty} norm'</span>, <span class="string">'Location'</span>,<span class="string">'Best'</span>);
+<span class="comment">% print -deps splineapprox.eps</span>
+</pre>
+<a id="output"></a>
+<pre class="codeoutput">
+Computing splines in the case of L2-norm... 
+Calling Mosek 9.1.9: 47 variables, 13 equality constraints
+   For improved efficiency, Mosek is solving the dual problem.
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 13              
+  Cones                  : 1               
+  Scalar variables       : 47              
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 2                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 13              
+  Cones                  : 1               
+  Scalar variables       : 47              
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 12
+Optimizer  - Cones                  : 2
+Optimizer  - Scalar variables       : 48                conic                  : 48              
+Optimizer  - Semi-definite variables: 0                 scalarized             : 0               
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 78                after factor           : 78              
+Factor     - dense dim.             : 0                 flops                  : 2.03e+03        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   0.0e+00  1.0e+00  2.0e+00  0.00e+00   0.000000000e+00   -1.000000000e+00  1.0e+00  0.00  
+1   1.0e-15  1.2e-01  8.6e-02  9.89e-01   -1.876131318e-02  -1.352241468e-01  1.2e-01  0.01  
+2   1.0e-15  2.2e-02  8.3e-03  8.52e-01   -1.009678909e-01  -1.162965077e-01  2.2e-02  0.01  
+3   4.6e-15  7.1e-04  5.3e-05  8.61e-01   -1.163435428e-01  -1.167380076e-01  7.1e-04  0.01  
+4   1.1e-14  5.7e-07  8.3e-10  9.99e-01   -1.166026860e-01  -1.166035383e-01  5.7e-07  0.01  
+5   5.3e-13  7.5e-08  4.1e-11  1.00e+00   -1.166032400e-01  -1.166033506e-01  7.5e-08  0.01  
+6   6.2e-13  3.6e-09  4.3e-13  1.00e+00   -1.166033515e-01  -1.166033567e-01  3.6e-09  0.01  
+Optimizer terminated. Time: 0.01    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: -1.1660335149e-01   nrm: 1e+00    Viol.  con: 3e-12    var: 0e+00    cones: 0e+00  
+  Dual.    obj: -1.1660335670e-01   nrm: 1e+00    Viol.  con: 0e+00    var: 9e-10    cones: 0e+00  
+Optimizer summary
+  Optimizer                 -                        time: 0.01    
+    Interior-point          - iterations : 6         time: 0.01    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): +0.116603
+ 
+Done! 
+Computing splines in the case of Linfty-norm... 
+Calling Mosek 9.1.9: 126 variables, 53 equality constraints
+   For improved efficiency, Mosek is solving the dual problem.
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 53              
+  Cones                  : 40              
+  Scalar variables       : 126             
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 53              
+  Cones                  : 40              
+  Scalar variables       : 126             
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 13
+Optimizer  - Cones                  : 41
+Optimizer  - Scalar variables       : 87                conic                  : 87              
+Optimizer  - Semi-definite variables: 0                 scalarized             : 0               
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 91                after factor           : 91              
+Factor     - dense dim.             : 0                 flops                  : 3.40e+03        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   3.9e+01  1.0e+00  1.0e+00  0.00e+00   0.000000000e+00   0.000000000e+00   1.0e+00  0.00  
+1   1.9e+01  4.8e-01  6.8e-02  2.86e+00   -5.444035897e-03  -1.786263660e-01  4.8e-01  0.01  
+2   1.3e+01  3.4e-01  5.7e-02  1.02e+01   -8.777315595e-03  -8.541770716e-03  3.4e-01  0.01  
+3   5.6e+00  1.4e-01  1.7e-02  1.29e+00   -2.576830802e-02  -2.455982413e-02  1.4e-01  0.01  
+4   1.6e+00  4.2e-02  2.5e-03  1.15e+00   -2.935524177e-02  -2.942035398e-02  4.2e-02  0.01  
+5   1.7e-01  4.3e-03  4.0e-05  1.01e+00   -3.153740998e-02  -3.181022484e-02  4.3e-03  0.01  
+6   4.2e-04  1.1e-05  5.2e-09  1.00e+00   -3.203705407e-02  -3.203774251e-02  1.1e-05  0.01  
+7   1.7e-06  4.3e-08  1.3e-12  1.00e+00   -3.203832952e-02  -3.203833221e-02  4.3e-08  0.01  
+8   6.7e-13  1.4e-12  5.1e-19  1.00e+00   -3.203833452e-02  -3.203833452e-02  1.9e-14  0.01  
+Optimizer terminated. Time: 0.02    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: -3.2038334523e-02   nrm: 1e+00    Viol.  con: 6e-14    var: 0e+00    cones: 0e+00  
+  Dual.    obj: -3.2038334523e-02   nrm: 1e+00    Viol.  con: 0e+00    var: 1e-13    cones: 5e-18  
+Optimizer summary
+  Optimizer                 -                        time: 0.02    
+    Interior-point          - iterations : 8         time: 0.01    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): +0.0320383
+ 
+Done! 
+</pre>
+<a id="plots"></a>
+<div id="plotoutput">
+<img src="fig6_20__01.png" alt=""> 
+</div>
+</div>
+</body>
+</html>

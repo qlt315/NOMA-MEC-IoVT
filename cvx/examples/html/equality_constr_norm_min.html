@@ -1,0 +1,159 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Equality constrained norm minimization.</title>
+<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/html/equality_constr_norm_min.html">
+<link rel="stylesheet" href="../examples.css" type="text/css">
+</head>
+<body>
+<div id="header">
+<h1>Equality constrained norm minimization.</h1>
+Jump to:&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#source">Source code</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#output">Text output</a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+Plots
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../index.html">Library index</a>
+</div>
+<div id="content">
+<a id="source"></a>
+<pre class="codeinput">
+<span class="comment">% This script constructs a random equality-constrained norm minimization</span>
+<span class="comment">% problem and solves it using CVX. You can also change p to +2 or +Inf</span>
+<span class="comment">% to produce different results. Alternatively, you an replace</span>
+<span class="comment">%     norm( A * x - b, p )</span>
+<span class="comment">% with</span>
+<span class="comment">%     norm_largest( A * x - b, 'largest', p )</span>
+<span class="comment">% for 1 &lt;= p &lt;= 2 * n.</span>
+
+<span class="comment">% Generate data</span>
+p = 1;
+n = 10; m = 2*n; q=0.5*n;
+A = randn(m,n);
+b = randn(m,1);
+C = randn(q,n);
+d = randn(q,1);
+
+<span class="comment">% Create and solve problem</span>
+cvx_begin
+   variable <span class="string">x(n)</span>
+   dual <span class="string">variable</span> <span class="string">y</span>
+   minimize( norm( A * x - b, p ) )
+   subject <span class="string">to</span>
+        y : C * x == d;
+cvx_end
+
+<span class="comment">% Display results</span>
+disp( sprintf( <span class="string">'norm(A*x-b,%g):'</span>, p ) );
+disp( [ <span class="string">'   ans   =   '</span>, sprintf( <span class="string">'%7.4f'</span>, norm(A*x-b,p) ) ] );
+disp( <span class="string">'Optimal vector:'</span> );
+disp( [ <span class="string">'   x     = [ '</span>, sprintf( <span class="string">'%7.4f '</span>, x ), <span class="string">']'</span> ] );
+disp( <span class="string">'Residual vector:'</span> );
+disp( [ <span class="string">'   A*x-b = [ '</span>, sprintf( <span class="string">'%7.4f '</span>, A*x-b ), <span class="string">']'</span> ] );
+disp( <span class="string">'Equality constraints:'</span> );
+disp( [ <span class="string">'   C*x   = [ '</span>, sprintf( <span class="string">'%7.4f '</span>, C*x ), <span class="string">']'</span> ] );
+disp( [ <span class="string">'   d     = [ '</span>, sprintf( <span class="string">'%7.4f '</span>, d   ), <span class="string">']'</span> ] );
+disp( <span class="string">'Lagrange multiplier for C*x==d:'</span> );
+disp( [ <span class="string">'   y     = [ '</span>, sprintf( <span class="string">'%7.4f '</span>, y ), <span class="string">']'</span> ] );
+</pre>
+<a id="output"></a>
+<pre class="codeoutput">
+ 
+Calling Mosek 9.1.9: 50 variables, 25 equality constraints
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 25              
+  Cones                  : 20              
+  Scalar variables       : 50              
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 25              
+  Cones                  : 20              
+  Scalar variables       : 50              
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the dual        
+Optimizer  - Constraints            : 10
+Optimizer  - Cones                  : 1
+Optimizer  - Scalar variables       : 26                conic                  : 6               
+Optimizer  - Semi-definite variables: 0                 scalarized             : 0               
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 55                after factor           : 55              
+Factor     - dense dim.             : 0                 flops                  : 3.24e+03        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   4.7e+00  5.0e-01  1.0e+00  0.00e+00   0.000000000e+00   0.000000000e+00   1.0e+00  0.00  
+1   2.1e+00  2.2e-01  3.7e-01  5.23e-01   8.995908369e+00   9.101440402e+00   4.5e-01  0.01  
+2   7.3e-01  7.9e-02  8.5e-02  5.56e-01   1.513297553e+01   1.519314926e+01   1.6e-01  0.01  
+3   2.0e-01  2.2e-02  1.3e-02  8.32e-01   1.857830332e+01   1.859836215e+01   4.3e-02  0.01  
+4   5.0e-02  5.3e-03  1.6e-03  9.67e-01   1.931299152e+01   1.931828674e+01   1.1e-02  0.01  
+5   8.9e-03  9.5e-04  1.2e-04  9.90e-01   1.958240321e+01   1.958345811e+01   1.9e-03  0.01  
+6   1.2e-04  1.3e-05  2.0e-07  9.98e-01   1.963656797e+01   1.963658262e+01   2.6e-05  0.01  
+7   1.6e-10  1.8e-11  3.0e-16  1.00e+00   1.963729329e+01   1.963729329e+01   3.5e-11  0.01  
+Optimizer terminated. Time: 0.01    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: 1.9637293285e+01    nrm: 3e+00    Viol.  con: 8e-11    var: 0e+00    cones: 9e-11  
+  Dual.    obj: 1.9637293285e+01    nrm: 4e+00    Viol.  con: 0e+00    var: 4e-15    cones: 0e+00  
+Optimizer summary
+  Optimizer                 -                        time: 0.01    
+    Interior-point          - iterations : 7         time: 0.01    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): +19.6373
+ 
+norm(A*x-b,1):
+   ans   =   19.6373
+Optimal vector:
+   x     = [  0.0454  0.7771 -0.4288 -0.2071 -0.6081  0.0065 -0.0013  0.0645 -0.3340 -0.6522 ]
+Residual vector:
+   A*x-b = [ -0.0000 -1.0527 -0.7833  1.6843  0.1257  2.5993  1.2661 -0.0000  0.2758 -1.6365 -0.9791  2.6851  0.8774 -0.8686  0.0000  1.6512 -0.0000  1.5824  0.0000  1.5699 ]
+Equality constraints:
+   C*x   = [ -1.0290  0.2431 -1.2566 -0.3472 -0.9414 ]
+   d     = [ -1.0290  0.2431 -1.2566 -0.3472 -0.9414 ]
+Lagrange multiplier for C*x==d:
+   y     = [ -3.6360  3.0466 -2.1301 -1.2477  0.1630 ]
+</pre>
+</div>
+</body>
+</html>

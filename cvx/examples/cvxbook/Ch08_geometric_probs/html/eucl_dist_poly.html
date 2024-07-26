@@ -1,0 +1,150 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Euclidean distance between polyhedra</title>
+<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/cvxbook/Ch08_geometric_probs/html/eucl_dist_poly.html">
+<link rel="stylesheet" href="../../../examples.css" type="text/css">
+</head>
+<body>
+<div id="header">
+<h1>Euclidean distance between polyhedra</h1>
+Jump to:&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#source">Source code</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#output">Text output</a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+Plots
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../../../index.html">Library index</a>
+</div>
+<div id="content">
+<a id="source"></a>
+<pre class="codeinput">
+<span class="comment">% Section 8.2.1, Boyd &amp; Vandenberghe "Convex Optimization"</span>
+<span class="comment">% Joelle Skaf - 10/09/05</span>
+<span class="comment">%</span>
+<span class="comment">% Given two polyhedra C = {x | A1*x &lt;= b1} and D = {x | A2*x &lt;= b2}, the</span>
+<span class="comment">% distance between them is the optimal value of the problem:</span>
+<span class="comment">%           minimize    || x - y ||_2</span>
+<span class="comment">%               s.t.    A1*x &lt;= b1</span>
+<span class="comment">%                       A2*y &lt;= b2</span>
+
+<span class="comment">% Input data</span>
+randn(<span class="string">'state'</span>,0);
+rand(<span class="string">'state'</span>,0);
+
+n  = 5;
+m1 = 2*n;
+m2 = 3*n;
+A1 = randn(m1,n);
+A2 = randn(m2,n);
+b1 = rand(m1,1);
+b2 = rand(m2,1) + A2*randn(n,1);
+
+<span class="comment">% Solution via CVX</span>
+cvx_begin
+    variables <span class="string">x(n)</span> <span class="string">y(n)</span>
+    minimize (norm(x - y))
+    A1*x &lt;= b1;
+    A2*y &lt;= b2;
+cvx_end
+
+<span class="comment">% Displaying results</span>
+disp(<span class="string">'------------------------------------------------------------------'</span>);
+disp(<span class="string">'The distance between the 2 polyhedra C and D is: '</span> );
+disp([<span class="string">'dist(C,D) = '</span> num2str(cvx_optval)]);
+</pre>
+<a id="output"></a>
+<pre class="codeoutput">
+ 
+Calling Mosek 9.1.9: 31 variables, 11 equality constraints
+   For improved efficiency, Mosek is solving the dual problem.
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 11              
+  Cones                  : 1               
+  Scalar variables       : 31              
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 11              
+  Cones                  : 1               
+  Scalar variables       : 31              
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 10
+Optimizer  - Cones                  : 1
+Optimizer  - Scalar variables       : 31                conic                  : 6               
+Optimizer  - Semi-definite variables: 0                 scalarized             : 0               
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 55                after factor           : 55              
+Factor     - dense dim.             : 0                 flops                  : 1.28e+03        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   1.0e+00  2.8e+00  2.0e+00  0.00e+00   0.000000000e+00   -1.000000000e+00  1.0e+00  0.00  
+1   6.0e-01  1.7e+00  9.5e-01  9.82e-01   -8.785174286e-01  -1.470841345e+00  6.0e-01  0.01  
+2   9.6e-02  2.7e-01  5.4e-02  1.29e+00   -9.869558390e-01  -1.077814479e+00  9.6e-02  0.01  
+3   3.2e-02  9.1e-02  1.1e-02  9.09e-01   -6.203091476e-01  -6.506016222e-01  3.2e-02  0.01  
+4   6.7e-03  1.9e-02  9.7e-04  1.07e+00   -5.209512788e-01  -5.277022343e-01  6.7e-03  0.01  
+5   7.1e-04  2.0e-03  3.3e-05  1.02e+00   -5.096057183e-01  -5.103276429e-01  7.1e-04  0.01  
+6   6.1e-06  1.7e-05  2.6e-08  1.00e+00   -5.085792095e-01  -5.085854747e-01  6.1e-06  0.01  
+7   5.9e-07  1.7e-06  7.8e-10  1.00e+00   -5.085684859e-01  -5.085690923e-01  5.9e-07  0.01  
+8   5.6e-08  1.6e-07  2.3e-11  1.00e+00   -5.085672068e-01  -5.085672644e-01  5.6e-08  0.01  
+9   2.1e-09  6.0e-09  1.7e-13  1.00e+00   -5.085670657e-01  -5.085670679e-01  2.1e-09  0.01  
+Optimizer terminated. Time: 0.01    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: -5.0856706572e-01   nrm: 1e+00    Viol.  con: 3e-13    var: 2e-09    cones: 0e+00  
+  Dual.    obj: -5.0856706791e-01   nrm: 2e+00    Viol.  con: 0e+00    var: 5e-09    cones: 0e+00  
+Optimizer summary
+  Optimizer                 -                        time: 0.01    
+    Interior-point          - iterations : 9         time: 0.01    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): +0.508567
+ 
+------------------------------------------------------------------
+The distance between the 2 polyhedra C and D is: 
+dist(C,D) = 0.50857
+</pre>
+</div>
+</body>
+</html>

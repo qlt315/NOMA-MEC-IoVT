@@ -1,0 +1,182 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Figure 7.1: Logistic regression</title>
+<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/cvxbook/Ch07_statistical_estim/html/logistics.html">
+<link rel="stylesheet" href="../../../examples.css" type="text/css">
+</head>
+<body>
+<div id="header">
+<h1>Figure 7.1: Logistic regression</h1>
+Jump to:&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#source">Source code</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#output">Text output</a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#plots">Plots</a>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../../../index.html">Library index</a>
+</div>
+<div id="content">
+<a id="source"></a>
+<pre class="codeinput">
+<span class="comment">% Section 7.1.1</span>
+<span class="comment">% Boyd &amp; Vandenberghe, "Convex Optimization"</span>
+<span class="comment">% Original by Lieven Vandenberghe</span>
+<span class="comment">% Adapted for CVX by Argyris Zymnis - 01/31/06</span>
+<span class="comment">%</span>
+<span class="comment">% We consider a binary random variable y with prob(y=1) = p and</span>
+<span class="comment">% prob(y=0) = 1-p. We assume that that y depends on a vector of</span>
+<span class="comment">% explanatory variables u in R^n. The logistic model has the form</span>
+<span class="comment">% p = exp(a'*u+b)/(1+exp(a'*u+b)), where a and b are the model parameters.</span>
+<span class="comment">% We have m data points (u_1,y_1),...,(u_m,y_m).</span>
+<span class="comment">% We can reorder the data so that for u_1,..,u_q the outcome is y = 1</span>
+<span class="comment">% and for u_(q+1),...,u_m the outcome is y = 0. Then it can be shown</span>
+<span class="comment">% that the ML estimate of a and b can be found by solving</span>
+<span class="comment">%</span>
+<span class="comment">% minimize sum_{i=1,..,q}(a'*u_i+b) - sum_i(log(1+exp(a'*u_i+b)))</span>
+<span class="comment">%</span>
+<span class="comment">% In this case we have m = 100 and the u_i are just scalars.</span>
+<span class="comment">% The figure shows the data as well as the function</span>
+<span class="comment">% f(x) = exp(aml*x+bml)/(1+exp(aml*x+bml)) where aml and bml are the</span>
+<span class="comment">% ML estimates of a and b.</span>
+
+randn(<span class="string">'state'</span>,0);
+rand(<span class="string">'state'</span>,0);
+
+<span class="comment">% Generate data</span>
+a =  1;
+b = -5 ;
+m= 100;
+
+u = 10*rand(m,1);
+y = (rand(m,1) &lt; exp(a*u+b)./(1+exp(a*u+b)));
+plot(u,y,<span class="string">'o'</span>)
+axis([-1,11,-0.1, 1.1]);
+
+<span class="comment">% Solve problem</span>
+<span class="comment">%</span>
+<span class="comment">% minimize  -(sum_(y_i=1) ui)*a - b + sum log (1+exp(a*ui+b)</span>
+
+U = [ones(m,1) u];
+cvx_expert <span class="string">true</span>
+cvx_begin
+    variables <span class="string">x(2)</span>
+    maximize(y'*U*x-sum(log_sum_exp([zeros(1,m); x'*U'])))
+cvx_end
+
+<span class="comment">% Plot results and logistic function</span>
+
+ind1 = find(y==1);
+ind2 = find(y==0);
+
+aml = x(2);  bml = x(1);
+us = linspace(-1,11,1000)';
+ps = exp(aml*us + bml)./(1+exp(aml*us+bml));
+
+dots = plot(us,ps,<span class="string">'-'</span>, u(ind1),y(ind1),<span class="string">'o'</span>,<span class="keyword">...</span>
+     u(ind2),y(ind2),<span class="string">'o'</span>);
+
+axis([-1, 11,-0.1,1.1]);
+xlabel(<span class="string">'x'</span>);
+ylabel(<span class="string">'y'</span>);
+</pre>
+<a id="output"></a>
+<pre class="codeoutput">
+ 
+Calling Mosek 9.1.9: 600 variables, 202 equality constraints
+   For improved efficiency, Mosek is solving the dual problem.
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 202             
+  Cones                  : 200             
+  Scalar variables       : 600             
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 2                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 202             
+  Cones                  : 200             
+  Scalar variables       : 600             
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 202
+Optimizer  - Cones                  : 200
+Optimizer  - Scalar variables       : 600               conic                  : 600             
+Optimizer  - Semi-definite variables: 0                 scalarized             : 0               
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 703               after factor           : 703             
+Factor     - dense dim.             : 0                 flops                  : 1.03e+04        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   3.4e+01  1.3e+00  2.1e+02  0.00e+00   2.130582563e+02   0.000000000e+00   1.0e+00  0.00  
+1   6.1e+00  2.4e-01  2.5e+01  3.61e-01   2.485318230e+01   -3.026617046e+01  1.8e-01  0.01  
+2   6.9e-01  2.7e-02  1.3e+00  6.57e-01   -2.492063045e+01  -3.259121601e+01  2.1e-02  0.01  
+3   3.5e-02  1.4e-03  1.6e-02  9.13e-01   -3.239002363e+01  -3.279631727e+01  1.0e-03  0.01  
+4   3.1e-03  1.2e-04  4.3e-04  9.93e-01   -3.292581875e+01  -3.296187533e+01  9.3e-05  0.01  
+5   2.3e-04  8.7e-06  8.4e-06  1.00e+00   -3.297634919e+01  -3.297897289e+01  6.7e-06  0.01  
+6   2.1e-05  7.9e-07  2.3e-07  1.00e+00   -3.297943954e+01  -3.297967826e+01  6.1e-07  0.02  
+7   2.3e-06  9.0e-08  8.8e-09  1.00e+00   -3.297967636e+01  -3.297970359e+01  7.0e-08  0.02  
+8   3.4e-07  1.3e-08  4.8e-10  1.00e+00   -3.297969912e+01  -3.297970306e+01  1.0e-08  0.02  
+9   4.5e-08  1.7e-09  2.3e-11  1.00e+00   -3.297970220e+01  -3.297970272e+01  1.3e-09  0.02  
+10  1.9e-08  7.2e-10  6.1e-12  1.00e+00   -3.297970246e+01  -3.297970268e+01  5.6e-10  0.02  
+Optimizer terminated. Time: 0.02    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: -3.2979702463e+01   nrm: 1e+02    Viol.  con: 3e-07    var: 0e+00    cones: 0e+00  
+  Dual.    obj: -3.2979702680e+01   nrm: 5e+00    Viol.  con: 0e+00    var: 0e+00    cones: 0e+00  
+Optimizer summary
+  Optimizer                 -                        time: 0.02    
+    Interior-point          - iterations : 10        time: 0.02    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): -32.9797
+ 
+</pre>
+<a id="plots"></a>
+<div id="plotoutput">
+<img src="logistics__01.png" alt=""> 
+</div>
+</div>
+</body>
+</html>

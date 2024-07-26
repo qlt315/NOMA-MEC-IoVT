@@ -1,0 +1,251 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Using Gurobi with CVX &mdash; CVX Users&#39; Guide</title>
+    
+    <link rel="stylesheet" href="_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="_static/cloud.js"></script>
+    <link rel="top" title="CVX Users&#39; Guide" href="index.html" />
+    <link rel="next" title="Using MOSEK with CVX" href="mosek.html" />
+    <link rel="prev" title="Credits and Acknowledgements" href="credits.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="mosek.html" title="Using MOSEK with CVX"
+             accesskey="N">next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="credits.html" title="Credits and Acknowledgements"
+             accesskey="P">previous</a> &nbsp; &nbsp;</li>
+    <li><a href="index.html">CVX Users&#39; Guide</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="using-gurobi-with-cvx">
+<span id="gurobi"></span><h1>Using Gurobi with CVX<a class="headerlink" href="#using-gurobi-with-cvx" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="about-gurobi">
+<h2>About Gurobi<a class="headerlink" href="#about-gurobi" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="http://www.gurobi.com">Gurobi Optimization</a> was founded in 2008 by some of the most
+experienced and respected members of the optimization community. The Gurobi solver quickly
+became an industry performance leader in linear, quadratic, and mixed-integer programming.
+Gurobi is a fantastic solver for use with CVX, particularly with the integer and binary
+variable capability added in CVX 2.0.</p>
+<p>Using Gurobi with CVX requires a valid license:</p>
+<ul>
+<li><p class="first"><em>Academic users</em>: information about obtaining a license can be found on the
+<a class="reference external" href="https://www.gurobi.com/academia/academic-program-and-licenses/">Gurobi Academic Program</a> page.</p>
+</li>
+<li><p class="first"><em>Commercial users</em> must purchase one of our CVX Professional licenses:</p>
+<ul class="simple">
+<li>A <em>bundled CVX + Gurobi license</em> allows Gurobi to be used exclusively within
+CVX. This is the most cost-effective approach for users who do not intend
+to use Gurobi outside of CVX and/or MATLAB.</li>
+<li>A <em>bring-your-own-solver (BYOS)</em> license allows CVX to be paired with a
+separate Gurobi license, enabling the same installation to be used within
+CVX and separate from it.</li>
+</ul>
+<p>Please contact <a class="reference external" href="mailto:sales&#37;&#52;&#48;cvxr&#46;com">CVX Sales</a> for more information about either option, and
+<a class="reference external" href="mailto:sales&#37;&#52;&#48;gurobi&#46;com">Gurobi Sales</a> for pricing information for standalone Gurobi licenses.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="gurobilic">
+<span id="id1"></span><h2>Using Gurobi with CVX<a class="headerlink" href="#gurobilic" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic">
+<li><p class="first">Download the the appropriate CVX bundle from the <a class="reference external" href="http://cvxr.com/cvx/download">CVX download page</a>
+and following the regular installation instructions at <a class="reference internal" href="install.html#install"><em>Installation</em></a>.
+The standard bundles include a CVX-specific version of the Gurobi version 9.0.</p>
+</li>
+<li><p class="first">Obtain the licenses for Gurobi and/or CVX, as needed:</p>
+<ul class="simple">
+<li>A Gurobi license code, which is composed of 32 hexidecimal digits in the format
+<tt class="docutils literal"><span class="pre">xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span></tt>. If you purchase a commercial CVX+Gurobi
+package, you will receive this code in an email from CVX Research. If you are an
+academic user, you will receive it directly from the <a class="reference external" href="https://www.gurobi.com/downloads/end-user-license-agreement-academic/">Gurobi academic license request</a> page.</li>
+<li>A CVX license should be saved in a convenient location for Step 4. You
+will need to be able to supply its full path to the <tt class="docutils literal"><span class="pre">cvx_setup</span></tt> command.</li>
+</ul>
+</li>
+<li><p class="first">If you need a full installation of Gurobi—because you wish to use a
+different version than is bundled with CVX, or because you wish to use Gurobi
+outside of CVX—obtain an appropriate installer from the <a class="reference external" href="https://www.gurobi.com/downloads/">Gurobi Download Center</a>
+and follow their instructions. Confirm that it can be successfully run from
+the MATLAB command line <em>before</em> proceeding with Step 2.</p>
+</li>
+<li><p class="first">Next, retrieve your Gurobi license key by running the command <tt class="docutils literal"><span class="pre">cvx_grbgetkey</span></tt>
+<em>{code}</em>, where <em>{code}</em> is the 32-digit Gurobi key. This is a convenience
+wrapper around Gurobi&#8217;s own <tt class="docutils literal"><span class="pre">grbgetkey</span></tt> script. The command will look
+something like this:</p>
+<div class="highlight-none"><div class="highlight"><pre>cvx_grbgetkey xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+</pre></div>
+</div>
+<p><em>Important note for academic users:</em> this step must be run from a computer
+connected to your university network (a VPN is usually sufficient).
+Please consult the Gurobi documentation for more details.</p>
+</li>
+<li><p class="first">Re-run <tt class="docutils literal"><span class="pre">cvx_setup</span></tt> so that the new Gurobi and/or CVX licenses can be detected.
+If a CVX Professional license was obtained, supply the path to this file as the
+argument to the <tt class="docutils literal"><span class="pre">cvx_setup</span></tt> command, as discussed in <a class="reference internal" href="install.html#licinstall"><em>Installing a CVX Professional license</em></a>.</p>
+</li>
+</ol>
+<p>If successful, the output of step 4 should show that Gurobi is among the list
+of available solvers. If you installed both a standalone Gurobi bundled version of Gurobi,
+they should both be available after setup.</p>
+</div>
+<div class="section" id="selecting-gurobi-as-your-default-solver">
+<h2>Selecting Gurobi as your default solver<a class="headerlink" href="#selecting-gurobi-as-your-default-solver" title="Permalink to this headline">¶</a></h2>
+<p>Even if Gurobi is successfully added to your solver list, it will not automatically
+be selected as your default solver. To change this, type the following two commands
+on the MATLAB command line:</p>
+<div class="highlight-none"><div class="highlight"><pre>cvx_solver gurobi
+cvx_save_prefs
+</pre></div>
+</div>
+<p>The first command changes the active solver to Gurobi, but only for the current session.
+The second line saves that change to CVX&#8217;s preference file, so that Gurobi will be
+selected as the active solver every time you start MATLAB.</p>
+<p>If multiple versions of Gurobi were found on the MATLAB path, then CVX will append a
+numeral to the end of the solver name, allowing you to switch between them; e.g.,</p>
+<div class="highlight-none"><div class="highlight"><pre>cvx_solver gurobi
+cvx_solver gurobi_2
+cvx_solver gurobi_3
+</pre></div>
+</div>
+<p>and so forth.</p>
+</div>
+<div class="section" id="obtaining-support-for-cvx-and-gurobi">
+<h2>Obtaining support for CVX and Gurobi<a class="headerlink" href="#obtaining-support-for-cvx-and-gurobi" title="Permalink to this headline">¶</a></h2>
+<p>If you encounter problems using CVX and Gurobi, please contact
+<a class="reference external" href="http://support.cvxr.com/">CVX Support</a> first instead of Gurobi.
+If we can reproduce your problem, we will determine whether or not it is an
+issue that is unique to CVX or needs to be forwarded to Gurobi for further
+analysis.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+        <p class="logo"><a href="index.html" title="index">
+          <img class="logo" src="_static/cvxrlogo.png" alt="Logo"/>
+        </a></p><div class="sphinxlocaltoc">
+    <h3><a href="index.html">Page contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Using Gurobi with CVX</a><ul>
+<li><a class="reference internal" href="#about-gurobi">About Gurobi</a></li>
+<li><a class="reference internal" href="#gurobilic">Using Gurobi with CVX</a></li>
+<li><a class="reference internal" href="#selecting-gurobi-as-your-default-solver">Selecting Gurobi as your default solver</a></li>
+<li><a class="reference internal" href="#obtaining-support-for-cvx-and-gurobi">Obtaining support for CVX and Gurobi</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div class="sphinxprev">
+    <h4>Previous page</h4>
+    <p class="topless"><a href="credits.html"
+                          title="Previous page">&larr; Credits and Acknowledgements</a></p>
+  </div>
+  <div class="sphinxnext">
+    <h4>Next page</h4>
+    <p class="topless"><a href="mosek.html"
+                          title="Next page">&rarr; Using MOSEK with CVX</a></p>
+  </div>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/gurobi.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul><h3>Other links</h3>
+<ul class="this-page-menu">
+<li><a href="CVX.pdf" target="_blank">Download the PDF</a></li>
+<li><a href="http://cvxr.com/cvx">CVX home page</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="mosek.html" title="Using MOSEK with CVX"
+             >next</a> &nbsp; &nbsp;</li>
+        <li class="right" >
+          <a href="credits.html" title="Credits and Acknowledgements"
+             >previous</a> &nbsp; &nbsp;</li>
+    <li><a href="index.html">CVX Users&#39; Guide</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright © 2012, CVX Research, Inc..
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>

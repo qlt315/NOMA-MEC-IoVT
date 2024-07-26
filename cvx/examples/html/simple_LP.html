@@ -1,0 +1,150 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Builds and solves a simple linear program</title>
+<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/html/simple_LP.html">
+<link rel="stylesheet" href="../examples.css" type="text/css">
+</head>
+<body>
+<div id="header">
+<h1>Builds and solves a simple linear program</h1>
+Jump to:&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#source">Source code</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#output">Text output</a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+Plots
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../index.html">Library index</a>
+</div>
+<div id="content">
+<a id="source"></a>
+<pre class="codeinput">
+echo <span class="string">on</span>
+
+n = 100;
+A = randn(0.5*n,n);
+b = randn(0.5*n,1);
+c = randn(n,1);
+d = randn;
+cvx_begin
+   variable <span class="string">x(n)</span>
+   dual <span class="string">variables</span> <span class="string">y</span> <span class="string">z</span>
+   minimize( c' * x + d )
+   subject <span class="string">to</span>
+      y : A * x == b;
+      z : x &gt;= 0;
+cvx_end
+
+echo <span class="string">off</span>
+</pre>
+<a id="output"></a>
+<pre class="codeoutput">
+n = 100;
+A = randn(0.5*n,n);
+b = randn(0.5*n,1);
+c = randn(n,1);
+d = randn;
+cvx_begin
+   variable x(n)
+   dual variables y z
+   minimize( c' * x + d )
+   subject to
+      y : A * x == b;
+      z : x &gt;= 0;
+cvx_end
+ 
+Calling Mosek 9.1.9: 100 variables, 50 equality constraints
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : LO (linear optimization problem)
+  Constraints            : 50              
+  Cones                  : 0               
+  Scalar variables       : 100             
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : LO (linear optimization problem)
+  Constraints            : 50              
+  Cones                  : 0               
+  Scalar variables       : 100             
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 50
+Optimizer  - Cones                  : 0
+Optimizer  - Scalar variables       : 100               conic                  : 0               
+Optimizer  - Semi-definite variables: 0                 scalarized             : 0               
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 1275              after factor           : 1275            
+Factor     - dense dim.             : 0                 flops                  : 2.98e+05        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   3.6e+01  1.1e+01  3.0e+01  0.00e+00   7.830148193e+00   0.000000000e+00   1.2e+01  0.00  
+1   6.4e+00  2.0e+00  5.4e+00  -7.05e-01  1.316749203e+00   -1.571374663e+00  2.1e+00  0.01  
+2   1.0e+00  3.1e-01  8.3e-01  -3.26e-01  -4.022147324e+00  -2.406022831e+00  3.3e-01  0.01  
+3   5.0e-03  1.5e-03  4.2e-03  -8.90e-01  -2.041272311e+03  5.898456059e-02   1.6e-03  0.01  
+4   5.0e-07  1.5e-07  4.2e-07  -9.99e-01  -2.031656979e+07  4.353189902e-02   1.6e-07  0.01  
+5   5.0e-11  1.5e-11  4.2e-11  -1.00e+00  -2.031657590e+11  4.353189854e-02   1.6e-11  0.01  
+Basis identification started.
+Primal basis identification phase started.
+Primal basis identification phase terminated. Time: 0.00
+Basis identification terminated. Time: 0.00
+Optimizer terminated. Time: 0.02    
+
+
+Interior-point solution summary
+  Problem status  : DUAL_INFEASIBLE
+  Solution status : DUAL_INFEASIBLE_CER
+  Primal.  obj: -1.0000000000e+00   nrm: 2e+01    Viol.  con: 1e-10    var: 0e+00  
+
+Basic solution summary
+  Problem status  : DUAL_INFEASIBLE
+  Solution status : DUAL_INFEASIBLE_CER
+  Primal.  obj: -4.0468032652e+01   nrm: 2e+01    Viol.  con: 1e-08    var: 0e+00  
+Optimizer summary
+  Optimizer                 -                        time: 0.02    
+    Interior-point          - iterations : 5         time: 0.01    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 49        time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Unbounded
+Optimal value (cvx_optval): -Inf
+ 
+
+echo off
+
+</pre>
+</div>
+</body>
+</html>

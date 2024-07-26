@@ -1,0 +1,177 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Simple power control in communication systems via GP.</title>
+<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/gp_tutorial/html/power_control.html">
+<link rel="stylesheet" href="../../examples.css" type="text/css">
+</head>
+<body>
+<div id="header">
+<h1>Simple power control in communication systems via GP.</h1>
+Jump to:&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#source">Source code</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#output">Text output</a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+Plots
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../../index.html">Library index</a>
+</div>
+<div id="content">
+<a id="source"></a>
+<pre class="codeinput">
+<span class="comment">% Boyd, Kim, Vandenberghe, and Hassibi, "A Tutorial on Geometric Programming"</span>
+<span class="comment">% Written for CVX by Almir Mutapcic 02/08/06</span>
+<span class="comment">% (a figure is generated)</span>
+<span class="comment">%</span>
+<span class="comment">% Solves the power control problem in communication systems, where</span>
+<span class="comment">% we want to minimize the total transmitter power for n transmitters,</span>
+<span class="comment">% subject to minimum SINR level, and lower and upper bounds on powers.</span>
+<span class="comment">% This results in a GP:</span>
+<span class="comment">%</span>
+<span class="comment">%   minimize   sum(P)</span>
+<span class="comment">%       s.t.   Pmin &lt;= P &lt;= Pmax</span>
+<span class="comment">%              SINR &gt;= SINR_min</span>
+<span class="comment">%</span>
+<span class="comment">% where variables are transmitter powers P.</span>
+<span class="comment">% Numerical data for the specific examples was made up.</span>
+
+<span class="comment">% problem constants</span>
+n = 5;                 <span class="comment">% number of transmitters and receivers</span>
+sigma = 0.5*ones(n,1); <span class="comment">% noise power at the receiver i</span>
+Pmin = 0.1*ones(n,1);  <span class="comment">% minimum power at the transmitter i</span>
+Pmax = 5*ones(n,1);    <span class="comment">% maximum power at the transmitter i</span>
+SINR_min = 2;          <span class="comment">% threshold SINR for each receiver</span>
+
+<span class="comment">% path gain matrix</span>
+G = [1.0  0.1  0.2  0.1  0.0
+     0.1  1.0  0.1  0.1  0.0
+     0.2  0.1  2.0  0.2  0.2
+     0.1  0.1  0.2  1.0  0.1
+     0.0  0.0  0.2  0.1  1.0];
+
+<span class="comment">% variables are power levels</span>
+cvx_begin <span class="string">gp</span>
+  variable <span class="string">P(n)</span>
+  <span class="comment">% objective function is the total transmitter power</span>
+  minimize( sum(P) )
+  subject <span class="string">to</span>
+    <span class="comment">% formulate the inverse SINR at each receiver using vectorize features</span>
+    Gdiag = diag(G);          <span class="comment">% the main diagonal of G matrix</span>
+    Gtilde = G - diag(Gdiag); <span class="comment">% G matrix without the main diagonal</span>
+    <span class="comment">% inverse SINR</span>
+    inverseSINR = (sigma + Gtilde*P)./(Gdiag.*P);
+    <span class="comment">% constraints are power limits and minimum SINR level</span>
+    Pmin &lt;= P &lt;= Pmax;
+    inverseSINR &lt;= (1/SINR_min);
+cvx_end
+
+fprintf(1,<span class="string">'\nThe minimum total transmitter power is %3.2f.\n'</span>,cvx_optval);
+disp(<span class="string">'Optimal power levels are: '</span>), P
+</pre>
+<a id="output"></a>
+<pre class="codeoutput">
+ 
+Calling Mosek 9.1.9: 98 variables, 36 equality constraints
+   For improved efficiency, Mosek is solving the dual problem.
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 36              
+  Cones                  : 26              
+  Scalar variables       : 98              
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 2                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 36              
+  Cones                  : 26              
+  Scalar variables       : 98              
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 31
+Optimizer  - Cones                  : 26
+Optimizer  - Scalar variables       : 93                conic                  : 78              
+Optimizer  - Semi-definite variables: 0                 scalarized             : 0               
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 129               after factor           : 164             
+Factor     - dense dim.             : 0                 flops                  : 2.21e+03        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   4.0e+00  3.9e+00  4.2e+01  0.00e+00   4.141688241e+01   0.000000000e+00   1.0e+00  0.00  
+1   8.0e-01  7.8e-01  5.8e+00  1.50e-01   1.012212828e+01   -1.870294754e+00  2.0e-01  0.01  
+2   1.4e-01  1.4e-01  4.9e-01  7.69e-01   -2.459182880e-01  -2.608141699e+00  3.5e-02  0.01  
+3   3.1e-02  3.0e-02  5.5e-02  9.32e-01   -2.209074938e+00  -2.757455927e+00  7.8e-03  0.01  
+4   1.0e-02  1.0e-02  1.0e-02  1.02e+00   -2.650687060e+00  -2.830184909e+00  2.6e-03  0.01  
+5   1.1e-03  1.1e-03  3.2e-04  1.09e+00   -2.820672262e+00  -2.838776800e+00  2.7e-04  0.01  
+6   1.0e-04  1.0e-04  9.3e-06  1.01e+00   -2.832073625e+00  -2.833773705e+00  2.6e-05  0.01  
+7   3.9e-06  3.8e-06  6.8e-08  1.00e+00   -2.833246687e+00  -2.833311190e+00  9.7e-07  0.01  
+8   2.8e-08  2.7e-08  4.2e-11  1.00e+00   -2.833293098e+00  -2.833293561e+00  7.0e-09  0.01  
+9   1.2e-09  1.1e-09  3.5e-13  1.00e+00   -2.833293540e+00  -2.833293559e+00  2.9e-10  0.01  
+Optimizer terminated. Time: 0.02    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: -2.8332935398e+00   nrm: 3e+00    Viol.  con: 2e-09    var: 3e-10    cones: 0e+00  
+  Dual.    obj: -2.8332935590e+00   nrm: 4e+00    Viol.  con: 0e+00    var: 2e-09    cones: 0e+00  
+Optimizer summary
+  Optimizer                 -                        time: 0.02    
+    Interior-point          - iterations : 9         time: 0.01    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): +17.0014
+ 
+
+The minimum total transmitter power is 17.00.
+Optimal power levels are: 
+
+P =
+
+    3.6601
+    3.1623
+    2.9867
+    4.1647
+    3.0276
+
+</pre>
+</div>
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Computing a sparse solution of a set of linear inequalities</title>
+<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/sparse_heuristics/html/sparse_solution.html">
+<link rel="stylesheet" href="../../examples.css" type="text/css">
+</head>
+<body>
+<div id="header">
+<h1>Computing a sparse solution of a set of linear inequalities</h1>
+Jump to:&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#source">Source code</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#output">Text output</a>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="#plots">Plots</a>
+&nbsp;&nbsp;&nbsp;&nbsp;<a href="../../index.html">Library index</a>
+</div>
+<div id="content">
+<a id="source"></a>
+<pre class="codeinput">
+<span class="comment">% Section 6.2, Boyd &amp; Vandenberghe "Convex Optimization"</span>
+<span class="comment">% "Just relax: Convex programming methods for subset selection</span>
+<span class="comment">%  and sparse approximation" by J. A. Tropp</span>
+<span class="comment">% Written for CVX by Almir Mutapcic - 02/28/06</span>
+<span class="comment">%</span>
+<span class="comment">% We consider a set of linear inequalities A*x &lt;= b which are</span>
+<span class="comment">% feasible. We apply two heuristics to find a sparse point x that</span>
+<span class="comment">% satisfies these inequalities.</span>
+<span class="comment">%</span>
+<span class="comment">% The (standard) l1-norm heuristic for finding a sparse solution is:</span>
+<span class="comment">%</span>
+<span class="comment">%   minimize   ||x||_1</span>
+<span class="comment">%       s.t.   Ax &lt;= b</span>
+<span class="comment">%</span>
+<span class="comment">% The log-based heuristic is an iterative method for finding</span>
+<span class="comment">% a sparse solution, by finding a local optimal point for the problem:</span>
+<span class="comment">%</span>
+<span class="comment">%   minimize   sum(log( delta + |x_i| ))</span>
+<span class="comment">%       s.t.   Ax &lt;= b</span>
+<span class="comment">%</span>
+<span class="comment">% where delta is a small threshold value (determines what is close to zero).</span>
+<span class="comment">% We cannot solve this problem since it is a minimization of a concave</span>
+<span class="comment">% function and thus it is not a convex problem. However, we can apply</span>
+<span class="comment">% a heuristic in which we linearize the objective, solve, and re-iterate.</span>
+<span class="comment">% This becomes a weighted l1-norm heuristic:</span>
+<span class="comment">%</span>
+<span class="comment">%   minimize sum( W_i * |x_i| )</span>
+<span class="comment">%       s.t. Ax &lt;= b</span>
+<span class="comment">%</span>
+<span class="comment">% which in each iteration re-adjusts the weights W_i based on the rule:</span>
+<span class="comment">%</span>
+<span class="comment">%   W_i = 1/(delta + |x_i|), where delta is a small threshold value</span>
+<span class="comment">%</span>
+<span class="comment">% This algorithm is described in papers:</span>
+<span class="comment">% "An Affine Scaling Methodology for Best Basis Selection"</span>
+<span class="comment">%  by B. D. Rao and K. Kreutz-Delgado</span>
+<span class="comment">% "Portfolio optimization with linear and &iuml;&not;?xed transaction costs"</span>
+<span class="comment">%  by M. S. Lobo, M. Fazel, and S. Boyd</span>
+
+<span class="comment">% fix random number generator so we can repeat the experiment</span>
+seed = 0;
+randn(<span class="string">'state'</span>,seed);
+rand(<span class="string">'state'</span>,seed);
+
+<span class="comment">% the threshold value below which we consider an element to be zero</span>
+delta = 1e-8;
+
+<span class="comment">% problem dimensions (m inequalities in n-dimensional space)</span>
+m = 100;
+n = 50;
+
+<span class="comment">% construct a feasible set of inequalities</span>
+<span class="comment">% (this system is feasible for the x0 point)</span>
+A  = randn(m,n);
+x0 = randn(n,1);
+b  = A*x0 + rand(m,1);
+
+<span class="comment">% l1-norm heuristic for finding a sparse solution</span>
+fprintf(1, <span class="string">'Finding a sparse feasible point using l1-norm heuristic ...'</span>)
+cvx_begin
+  variable <span class="string">x_l1(n)</span>
+  minimize( norm( x_l1, 1 ) )
+  subject <span class="string">to</span>
+    A*x_l1 &lt;= b;
+cvx_end
+
+<span class="comment">% number of nonzero elements in the solution (its cardinality or diversity)</span>
+nnz = length(find( abs(x_l1) &gt; delta ));
+fprintf(1,[<span class="string">'\nFound a feasible x in R^%d that has %d nonzeros '</span> <span class="keyword">...</span>
+           <span class="string">'using the l1-norm heuristic.\n'</span>],n,nnz);
+
+<span class="comment">% iterative log heuristic</span>
+NUM_RUNS = 15;
+nnzs = [];
+W = ones(n,1); <span class="comment">% initial weights</span>
+
+disp([char(10) <span class="string">'Log-based heuristic:'</span>]);
+<span class="keyword">for</span> k = 1:NUM_RUNS
+  cvx_begin <span class="string">quiet</span>
+    variable <span class="string">x_log(n)</span>
+    minimize( sum( W.*abs(x_log) ) )
+    subject <span class="string">to</span>
+      A*x_log &lt;= b;
+  cvx_end
+
+  <span class="comment">% display new number of nonzeros in the solution vector</span>
+  nnz = length(find( abs(x_log) &gt; delta ));
+  nnzs = [nnzs nnz];
+  fprintf(1,<span class="string">'   found a solution with %d nonzeros...\n'</span>, nnz);
+
+  <span class="comment">% adjust the weights and re-iterate</span>
+  W = 1./(delta + abs(x_log));
+<span class="keyword">end</span>
+
+<span class="comment">% number of nonzero elements in the solution (its cardinality or diversity)</span>
+nnz = length(find( abs(x_log) &gt; delta ));
+fprintf(1,[<span class="string">'\nFound a feasible x in R^%d that has %d nonzeros '</span> <span class="keyword">...</span>
+           <span class="string">'using the log heuristic.\n'</span>],n,nnz);
+
+<span class="comment">% plot number of nonzeros versus iteration</span>
+plot(1:NUM_RUNS, nnzs, [1 NUM_RUNS],[nnzs(1) nnzs(1)],<span class="string">'--'</span>);
+axis([1 NUM_RUNS 0 n])
+xlabel(<span class="string">'iteration'</span>), ylabel(<span class="string">'number of nonzeros (cardinality)'</span>);
+legend(<span class="string">'log heuristic'</span>,<span class="string">'l1-norm heuristic'</span>,<span class="string">'Location'</span>,<span class="string">'SouthEast'</span>)
+</pre>
+<a id="output"></a>
+<pre class="codeoutput">
+Finding a sparse feasible point using l1-norm heuristic ... 
+Calling Mosek 9.1.9: 200 variables, 100 equality constraints
+------------------------------------------------------------
+
+MOSEK Version 9.1.9 (Build date: 2019-11-21 11:32:15)
+Copyright (c) MOSEK ApS, Denmark. WWW: mosek.com
+Platform: MACOSX/64-X86
+
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 100             
+  Cones                  : 50              
+  Scalar variables       : 200             
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer started.
+Presolve started.
+Linear dependency checker started.
+Linear dependency checker terminated.
+Eliminator started.
+Freed constraints in eliminator : 0
+Eliminator terminated.
+Eliminator - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - tries                  : 1                 time                   : 0.00            
+Lin. dep.  - number                 : 0               
+Presolve terminated. Time: 0.00    
+Problem
+  Name                   :                 
+  Objective sense        : min             
+  Type                   : CONIC (conic optimization problem)
+  Constraints            : 100             
+  Cones                  : 50              
+  Scalar variables       : 200             
+  Matrix variables       : 0               
+  Integer variables      : 0               
+
+Optimizer  - threads                : 8               
+Optimizer  - solved problem         : the primal      
+Optimizer  - Constraints            : 100
+Optimizer  - Cones                  : 50
+Optimizer  - Scalar variables       : 200               conic                  : 100             
+Optimizer  - Semi-definite variables: 0                 scalarized             : 0               
+Factor     - setup time             : 0.00              dense det. time        : 0.00            
+Factor     - ML order time          : 0.00              GP order time          : 0.00            
+Factor     - nonzeros before factor : 5050              after factor           : 5050            
+Factor     - dense dim.             : 0                 flops                  : 1.35e+06        
+ITE PFEAS    DFEAS    GFEAS    PRSTATUS   POBJ              DOBJ              MU       TIME  
+0   6.9e+00  0.0e+00  5.1e+01  0.00e+00   5.000000000e+01   0.000000000e+00   1.0e+00  0.00  
+1   2.5e+00  1.2e-15  1.1e+01  1.52e-01   4.011789130e+01   1.918514069e+01   3.5e-01  0.01  
+2   2.6e-01  5.7e-15  1.2e-01  9.60e-01   3.596246600e+01   3.398708338e+01   3.8e-02  0.01  
+3   3.5e-02  3.4e-14  1.4e-02  1.17e+00   3.590440920e+01   3.566690230e+01   5.0e-03  0.01  
+4   3.8e-03  2.2e-14  5.6e-04  1.03e+00   3.594107223e+01   3.591508466e+01   5.6e-04  0.01  
+5   4.4e-04  5.1e-14  2.2e-05  1.01e+00   3.594136121e+01   3.593843210e+01   6.3e-05  0.01  
+6   6.9e-05  2.1e-13  1.5e-06  1.00e+00   3.594075920e+01   3.594029396e+01   1.0e-05  0.02  
+7   9.8e-06  5.6e-13  7.9e-08  1.00e+00   3.594077965e+01   3.594071398e+01   1.4e-06  0.02  
+8   1.9e-08  3.0e-12  6.8e-12  1.00e+00   3.594077695e+01   3.594077682e+01   2.8e-09  0.02  
+Optimizer terminated. Time: 0.02    
+
+
+Interior-point solution summary
+  Problem status  : PRIMAL_AND_DUAL_FEASIBLE
+  Solution status : OPTIMAL
+  Primal.  obj: 3.5940776947e+01    nrm: 2e+01    Viol.  con: 6e-08    var: 7e-09    cones: 0e+00  
+  Dual.    obj: 3.5940776819e+01    nrm: 1e+00    Viol.  con: 0e+00    var: 6e-10    cones: 0e+00  
+Optimizer summary
+  Optimizer                 -                        time: 0.02    
+    Interior-point          - iterations : 8         time: 0.02    
+      Basis identification  -                        time: 0.00    
+        Primal              - iterations : 0         time: 0.00    
+        Dual                - iterations : 0         time: 0.00    
+        Clean primal        - iterations : 0         time: 0.00    
+        Clean dual          - iterations : 0         time: 0.00    
+    Simplex                 -                        time: 0.00    
+      Primal simplex        - iterations : 0         time: 0.00    
+      Dual simplex          - iterations : 0         time: 0.00    
+    Mixed integer           - relaxations: 0         time: 0.00    
+
+------------------------------------------------------------
+Status: Solved
+Optimal value (cvx_optval): +35.9408
+ 
+
+Found a feasible x in R^50 that has 44 nonzeros using the l1-norm heuristic.
+
+Log-based heuristic:
+   found a solution with 44 nonzeros...
+   found a solution with 37 nonzeros...
+   found a solution with 35 nonzeros...
+   found a solution with 35 nonzeros...
+   found a solution with 35 nonzeros...
+   found a solution with 35 nonzeros...
+   found a solution with 35 nonzeros...
+   found a solution with 35 nonzeros...
+   found a solution with 35 nonzeros...
+   found a solution with 35 nonzeros...
+   found a solution with 35 nonzeros...
+   found a solution with 35 nonzeros...
+   found a solution with 35 nonzeros...
+   found a solution with 35 nonzeros...
+   found a solution with 35 nonzeros...
+
+Found a feasible x in R^50 that has 35 nonzeros using the log heuristic.
+</pre>
+<a id="plots"></a>
+<div id="plotoutput">
+<img src="sparse_solution__01.png" alt=""> 
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,225 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Using MOSEK with CVX &mdash; CVX Users&#39; Guide</title>
+    
+    <link rel="stylesheet" href="_static/cloud.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Noticia+Text|Open+Sans|Droid+Sans+Mono" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '2.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="_static/jquery.cookie.js"></script>
+    <script type="text/javascript" src="_static/cloud.js"></script>
+    <link rel="top" title="CVX Users&#39; Guide" href="index.html" />
+    <link rel="prev" title="Using Gurobi with CVX" href="gurobi.html" /> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <div class="relbar-top">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="gurobi.html" title="Using Gurobi with CVX"
+             accesskey="P">previous</a> &nbsp; &nbsp;</li>
+    <li><a href="index.html">CVX Users&#39; Guide</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    </div>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="using-mosek-with-cvx">
+<span id="mosek"></span><h1>Using MOSEK with CVX<a class="headerlink" href="#using-mosek-with-cvx" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="about-mosek">
+<h2>About MOSEK<a class="headerlink" href="#about-mosek" title="Permalink to this headline">¶</a></h2>
+<p><a class="reference external" href="https://mosek.com/">MOSEK ApS</a> is widely considered the leader in commercial software
+for nonlinear convex optimization. The company was established in 1997, and is
+led by founding CEO <a class="reference external" href="http://www.linkedin.com/in/edandersen">Erling Andersen</a> and
+a technical advisory board chaired by
+Stanford Professor <a class="reference external" href="http://www.stanford.edu/~yyye/">Yinyu Ye</a>. Both are internationally
+recognized for their contributions to the field of convex optimization, and remain active
+in research and publication. With its support for integer variables, the semidefinite cone,
+and (with version 9.0) the exponential cone, the MOSEK solver has native support for a
+wider variety of CVX models than any other solver.</p>
+<p>Using MOSEK with CVX requires a valid license:</p>
+<ul>
+<li><p class="first"><em>Academic users</em>: request an license from the <a class="reference external" href="https://www.mosek.com/products/academic-licenses/">MOSEK Academic Licensing</a> page.</p>
+</li>
+<li><p class="first"><em>Commercial users</em> must purchase one of our CVX Professional licenses:</p>
+<ul class="simple">
+<li>A <em>bundled CVX + MOSEK license</em> allows MOSEK to be used exclusively within
+CVX. This is the most cost-effective approach for users who do not intend
+to use MOSEK outside of CVX and/or MATLAB.</li>
+<li>A <em>bring-your-own-solver (BYOS)</em> license allows CVX to be paired with a
+separate MOSEK license, enabling the same installation to be used within
+CVX and separate from it.</li>
+</ul>
+<p>Please contact <a class="reference external" href="mailto:sales&#37;&#52;&#48;cvxr&#46;com">CVX Sales</a> for more information about either option, and
+<a class="reference external" href="mailto:sales&#37;&#52;&#48;mosek&#46;com">MOSEK ApS Sales</a> for pricing information for standalone MOSEK licenses.</p>
+</li>
+</ul>
+</div>
+<div class="section" id="id1">
+<h2>Using MOSEK with CVX<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>Download the the appropriate CVX bundle from the <a class="reference external" href="http://cvxr.com/cvx/download">CVX download page</a>
+and following the regular installation instructions at <a class="reference internal" href="install.html#install"><em>Installation</em></a>.
+The standard bundles include a CVX-specific version of the MOSEK version 9.1.</li>
+<li>Obtain the licenses for MOSEK and/or CVX, as needed:<ul>
+<li>A MOSEK license should be installed in the location <tt class="docutils literal"><span class="pre">mosek/mosek.lic</span></tt>
+in your home directory.</li>
+<li>A CVX license should be saved in a convenient location for Step 4. You
+will need to be able to supply its full path to the <tt class="docutils literal"><span class="pre">cvx_setup</span></tt> command.</li>
+</ul>
+</li>
+<li>If you need a full installation of MOSEK—either because you wish to use a
+different version than is bundled with CVX, or because you wish to use MOSEK
+outside of CVX—obtain an appropriate installer from the <a class="reference external" href="https://www.mosek.com/downloads/">MOSEK download page</a>
+and follow their instructions. Confirm that it can be successfully run from
+the MATLAB command line <em>before</em> proceeding with Step 2.</li>
+<li>Re-run <tt class="docutils literal"><span class="pre">cvx_setup</span></tt> so that the new MOSEK and/or CVX licenses can be detected.
+If a CVX Professional license was obtained, supply the path to this file as the
+argument to the <tt class="docutils literal"><span class="pre">cvx_setup</span></tt> command, as discussed in <a class="reference internal" href="install.html#licinstall"><em>Installing a CVX Professional license</em></a>.</li>
+</ol>
+<p>If successful, the output of step 4 should show that MOSEK is among the list
+of available solvers. If you installed both a standalone and bundled version of MOSEK,
+they should both be available after setup.</p>
+</div>
+<div class="section" id="selecting-mosek-as-your-default-solver">
+<h2>Selecting MOSEK as your default solver<a class="headerlink" href="#selecting-mosek-as-your-default-solver" title="Permalink to this headline">¶</a></h2>
+<p>Even if MOSEK is successfully added to your solver list, it will not automatically
+be selected as your default solver. To change this, type the following two commands
+on the MATLAB command line:</p>
+<div class="highlight-none"><div class="highlight"><pre>cvx_solver mosek
+cvx_save_prefs
+</pre></div>
+</div>
+<p>The first command changes the active solver to MOSEK, but only for the current session.
+The second line saves that change to CVX&#8217;s preference file, so that MOSEK will be
+selected as the active solver every time you start MATLAB.</p>
+<p>If multiple versions of MOSEK were found on the MATLAB path, then CVX will append a
+numeral to the end of the solver name, allowing you to switch between them; e.g.,</p>
+<div class="highlight-none"><div class="highlight"><pre>cvx_solver mosek
+cvx_solver mosek_2
+cvx_solver mosek_3
+</pre></div>
+</div>
+<p>and so forth.</p>
+</div>
+<div class="section" id="obtaining-support-for-cvx-and-mosek">
+<h2>Obtaining support for CVX and MOSEK<a class="headerlink" href="#obtaining-support-for-cvx-and-mosek" title="Permalink to this headline">¶</a></h2>
+<p>If you encounter problems using CVX and MOSEK, please contact
+<a class="reference external" href="http://support.cvxr.com/">CVX Support</a> first instead of MOSEK ApS.
+If we can reproduce your problem, we will determine whether or not it is an
+issue that is unique to CVX or needs to be forwarded to MOSEK ApS for further
+analysis.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+        <p class="logo"><a href="index.html" title="index">
+          <img class="logo" src="_static/cvxrlogo.png" alt="Logo"/>
+        </a></p><div class="sphinxlocaltoc">
+    <h3><a href="index.html">Page contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Using MOSEK with CVX</a><ul>
+<li><a class="reference internal" href="#about-mosek">About MOSEK</a></li>
+<li><a class="reference internal" href="#id1">Using MOSEK with CVX</a></li>
+<li><a class="reference internal" href="#selecting-mosek-as-your-default-solver">Selecting MOSEK as your default solver</a></li>
+<li><a class="reference internal" href="#obtaining-support-for-cvx-and-mosek">Obtaining support for CVX and MOSEK</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div class="sphinxprev">
+    <h4>Previous page</h4>
+    <p class="topless"><a href="gurobi.html"
+                          title="Previous page">&larr; Using Gurobi with CVX</a></p>
+  </div>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/mosek.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul><h3>Other links</h3>
+<ul class="this-page-menu">
+<li><a href="CVX.pdf" target="_blank">Download the PDF</a></li>
+<li><a href="http://cvxr.com/cvx">CVX home page</a></li>
+</ul>
+
+
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="relbar-bottom">
+        
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="gurobi.html" title="Using Gurobi with CVX"
+             >previous</a> &nbsp; &nbsp;</li>
+    <li><a href="index.html">CVX Users&#39; Guide</a> &raquo;</li>
+ 
+      </ul>
+    </div>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright © 2012, CVX Research, Inc..
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+    <!-- cloud_sptheme 1.4 -->
+  </body>
+</html>
