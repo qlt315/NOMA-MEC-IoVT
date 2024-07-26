@@ -8,15 +8,12 @@ In this section we describe each operator, function, set, and command that you a
 likely to encounter in CVX. In some cases, limitations of the underlying solver
 place certain restrictions or caveats on their use:
 
--  Functions marked with a dagger (†) are not supported natively by manu
-   solvers that CVX uses. Models incorporating these functions will be solved
-   most effectively by Mosek, the only bundled solver with support for the
-   exponential cone upon which these functions are constructed. For all
-   other solvers, these functions are handled using a successive
+-  Functions marked with a dagger (†) are not supported natively by the
+   solvers that CVX uses. They are handled using a successive
    approximation method which makes multiple calls to the underlying
-   solver, achieving the same final precision. If your problem requires the use
-   of the successive approximation method, a warning will be issued.
-   This technique is discussed further in
+   solver, achieving the same final precision. If you use one of these
+   functions, you will be warned that successive approximation will be
+   used. This technique is discussed further in
    :ref:`successive`. As this section discusses, this is an experimental
    approach that works well in many cases, but cannot be guaranteed.
 
@@ -128,11 +125,11 @@ Nonlinear
     This function can be used in CVX in two ways:
 
     -  If ``p`` is a variable and ``x`` is a constant, then
-       ``polyval(x,p)`` computes a linear combination of the elements of
+       ``polyval(p,x)`` computes a linear combination of the elements of
        ``p``. The combination must satisfy the DCP rules for addition
        and scaling.
     -  If ``p`` is a constant and ``x`` is a variable, then
-       ``polyval(x,p)`` constructs a polynomial function of the variable
+       ``polyval(p,x)`` constructs a polynomial function of the variable
        ``x``. The polynomial must be affine, convex, or concave, and
        ``x`` must be real and affine.
        
@@ -157,17 +154,17 @@ Nonlinear
     see the functions ``pow_p``, ``pow_pos``, and ``pow_abs`` in the
     next section for useful alternatives.
 
-† ``power(p,x)``
-    ``p.^x`` and ``p^x``, where ``p`` is a real constant and ``x`` is a
-    real variable. For ``p^x``, both ``p`` and ``x`` must be scalars.
-    Valid values of ``p`` include:
+† ``power(q,x)``
+    ``q.^x`` and ``q^x``, where ``q`` is a real constant and ``x`` is a
+    real variable. For ``q^x``, both ``q`` and ``x`` must be scalars.
+    Valid values of ``q`` include:
 
-    -  :math:`p \in \{0,1\}`. Constant.
-    -  :math:`0 < p < 1`. Convex and nonincreasing; ``x`` must be
+    -  :math:`q \in \{0,1\}`. Constant.
+    -  :math:`0 < q < 1`. Convex and nonincreasing; ``x`` must be
        concave.
-    -  :math:`p > 1`. Convex and nondecreasing; ``x`` must be convex.
+    -  :math:`q > 1`. Convex and nondecreasing; ``x`` must be convex.
 
-    Negative values of ``p`` are not permitted.
+    Negative values of ``q`` are not permitted.
 
 ``std``
     Standard deviation. Convex.
@@ -507,12 +504,12 @@ positive integer constant.
 ``semidefinite(n)``
     .. math:: 
     
-    	\mathbf{S}^n_+ \triangleq \left\{\,X\in\mathbf{R}^{n\times n}\,~|~\,X=X^T,~X\succeq 0\,\right\}
+    	\mathbf{S}^n_+ \triangleq \left\{\,X\in\mathbf{R}^{n\times n}\,~|~\,X=X^T,~\lambda_{\min}(X)\geq 0\,\right\}
 
 ``hermitian_semidefinite(n)``
     .. math:: 
     
-    	\mathbf{H}^n_+ \triangleq \left\{\,Z\in\mathbf{C}^{n\times n}\,~|~\,Z=Z^H,~Z\succeq 0\,\right\}
+    	\mathbf{H}^n_+ \triangleq \left\{\,Z\in\mathbf{C}^{n\times n}\,~|~\,Z=Z^H,~\lambda_{\min}(Z)\geq 0\,\right\}
 
 ``nonneg_poly_coeffs(n)``
     The cone of all coefficients of nonnegative polynomials of degree :math:`n`; :math:`n` must be even: 

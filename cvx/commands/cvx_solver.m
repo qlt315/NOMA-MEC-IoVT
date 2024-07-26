@@ -38,22 +38,24 @@ if nargin,
     if isempty( sname ),
         sname = 'default';
     elseif ~ischar( sname ) || size( sname, 1 ) ~= 1,
-        error( 'Argument must be a string.' );
+        cvx_throw( 'Argument must be a string.' );
     end
     try
         snumber = cvx___.solvers.map.(lower(sname));
     catch
-        error( 'Unknown, unusable, or missing solver: %s', sname );
+        cvx_throw( 'Unknown, unusable, or missing solver: %s', sname );
     end
     if ~isempty( cvx___.solvers.list(snumber).error ),
-        error( 'Solver unusable due to prior errors: %s', sname );
+        cvx_throw( 'Solver unusable due to prior errors: %s', sname );
     end
     if isempty( cvx___.problems ),
         cvx___.solvers.selected = snumber;
     elseif ~isa( evalin( 'caller', 'cvx_problem', '[]' ), 'cvxprob' ),
-        error( 'The global CVX solver selection cannot be changed while a model is being constructed.' );
-    else
-        cvx___.problems(end).solver.index = snumber;
+        cvx_throw( 'The global CVX solver selection cannot be changed while a model is being constructed.' );
+    elseif cvx___.problems(end).solver ~= snumber,
+        cvx___.problems(end).solver = snumber;
+        cvx___.problems(end).settings = cvx___.solvers.list.settings;
+        cvx___.warmstart = {cvx___.warmstart{1}};
     end
     if cvx___.solvers.active,
         cvx_setspath;
@@ -64,7 +66,7 @@ elseif nargout == 0,
     statvec = [ 0, solvers.map.default, solvers.active ];
     statstr = { 'selected', 'default', 'active' };
     if ~isempty( cvx___.problems ),
-        statvec(1) = cvx___.problems(end).solver.index;
+        statvec(1) = cvx___.problems(end).solver;
     else
         statvec(1) = solvers.selected;
     end
@@ -109,6 +111,6 @@ if nargout > 0,
     slist = cvx___.solvers.names;
 end
 
-% Copyright 2005-2016 CVX Research, Inc.
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

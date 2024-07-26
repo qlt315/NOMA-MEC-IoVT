@@ -5,7 +5,7 @@ if nargin == 1,
     switch class( v ),
         case 'struct',
             if numel( v ) ~= 1,
-                error( 'struct arrays not permitted in cvx tuple objects.' );
+                cvx_throw( 'struct arrays not permitted in cvx tuple objects.' );
             end
         case 'cell',
             v = reshape( v, 1, numel( v ) );
@@ -15,9 +15,8 @@ if nargin == 1,
 else
     v = varargin;
 end
+v = class( struct( 'value_', { v }, 'dual_', { [] } ), 'cvxtuple' );
 
-v = class( struct( 'value_', { v }, 'dual_', { [] } ), 'cvxtuple', cvxobj );
-
-% Copyright 2005-2016 CVX Research, Inc.
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

@@ -16,7 +16,6 @@ function cvx_expert( flag )
 
 global cvx___
 cvx_global
-narginchk(1,1);
 if nargin == 1,
     if isnumeric(flag) || islogical(flag),
         ns = double(flag) ~= 0;
@@ -27,15 +26,15 @@ if nargin == 1,
             case 'false',
                 ns = false;
             otherwise,
-                error( 'String arugment must be ''true'' or ''false''.' );
+                cvx_throw( 'String arugment must be ''true'' or ''false''.' );
         end
     else
-        error( 'Argument must be a numeric scalar or a string.' );
+        cvx_throw( 'Argument must be a numeric scalar or a string.' );
     end
 end
 cvx___.expert = ns;
 
-% Copyright 2005-2016 CVX Research, Inc.
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.
 

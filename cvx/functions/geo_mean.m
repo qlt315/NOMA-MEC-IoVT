@@ -1,4 +1,4 @@
-function y = geo_mean( x, dim, w )
+function y = geo_mean( varargin )
 
 %GEO_MEAN   Geometric mean.
 %   Y=GEO_MEAN(X), where X is a vector, computes the geometrix mean of X. If any
@@ -24,50 +24,52 @@ function y = geo_mean( x, dim, w )
 % Check arguments
 %
 
-narginchk(1,3);
-if ~isreal( x ), 
-    error( 'First argument must be real.' ); 
-elseif nargin < 2,
-    dim = cvx_default_dimension( size( x ) );
-elseif ~cvx_check_dimension( dim ),
-    error( 'Second argument must be a positive integer.' );
+persistent P
+if isempty( P ),
+    P.map = cvx_remap( { 'real' ; 'concave' ; 'l_convex' ; 'l_concave' } );
+    P.map = bsxfun( @and, P.map, ~cvx_remap( 'negative' ) );
+    P.funcs = { @geo_mean_1, @geo_mean_2, @geo_mean_2, @geo_mean_2 };
+    P.zero = 1;
+    P.constant = 1;
+    P.reduce = true;
+    P.reverse = false;
+    P.name = 'geo_mean';
+    P.errargs = [];
+    P.dimarg = 2;
 end
-sx = size( x );
-nx = sx( dim );
-
-%
-% Third argument check
-%
-
-if nargin < 3 || isempty( w ),
-    w = [];
-elseif numel( w ) ~= length( w ) || ~isnumeric( w ) || ~isreal( w ) || any( w < 0 ) || any( w ~= floor( w ) ),
-    error( 'Third argument must be a vector of nonnegative integers.' );
-elseif length( w ) ~= nx,
-    error( 'Third argument must be a vector of length %d.', nx );
-else
-    w = reshape( w, 1, nx );
-end
-
-if nx == 0,
-    sx( dim ) = 1;
-    y = ones( sx );
-else
-    if nx == 1,
-        y = x;
-    elseif isempty( w ) || ~any( diff( w ) ),
-        y = exp( sum( log( max( x, realmin ) ), dim ) * ( 1 / nx ) );
-    elseif dim == 1,
-        y = exp( w * log( max( x, realmin ) ) * ( 1 / sum( w ) ) );
+[ sx, x, dim, w ] = cvx_get_dimension( varargin, 2 );
+if ~isempty( w ),
+    if ~( numel(w)==length(w) && isnumeric(w) && isreal(w) && all(w>=0) ),
+        cvx_throw( 'Third argument must be a vector of nonnegative numbers.' );
+    elseif ~any( w ),
+        cvx_throw( 'The weight vector cannot be all zeros.')
+    elseif numel( w ) ~= sx(dim),
+        cvx_throw( 'Third argument must be a vector of length %d', sx(dim) );
     else
-        pvec = [ dim, 1 : dim - 1, dim + 1 : ndims( x ) ];
-        y = ipermute( exp( w * log( max( permute( x, pvec ), realmin ) ) * ( 1 / sum( w ) ) ), pvec );
+        w = w(:) / sum(w);
     end
-    xmin = min( x, [], dim );
-    y( xmin <  0 ) = -Inf;
-    y( xmin == 0 ) = 0;
 end
+y = cvx_reduce_op( P, x, dim, w );
 
-% Copyright 2005-2016 CVX Research, Inc. 
+function y = geo_mean_1( x, w )
+[ nx, nv ] = size( x );
+if isempty( w ), 
+    w = 1 / nx;
+else
+    w = repmat( w, [ 1, nv ] ); 
+end
+y = prod( x .^ w, 1 );
+
+function y = geo_mean_2( x, w ) %#ok
+[ nx, nv ] = size( x );
+cvx_begin
+    hypograph variable y(1,nv);
+    { cvx_linearize(x), y } == geo_mean_cone( [nx,nv], 1, w, 'func' ); %#ok
+    cvx_setnneg(y);
+cvx_end
+
+% Copyright 2005-2014 CVX Research, Inc.
+% See the file LICENSE.txt for full copyright information.
+% The command 'cvx_where' will show where this file is located.% Copyright 2005-2014 CVX Research, Inc. 
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

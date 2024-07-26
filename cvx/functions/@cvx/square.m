@@ -1,79 +1,29 @@
 function y = square( x )
 
-%SQUARE   Internal cvx version.
+%SQUARE    Square.
+%   Internal CVX version. (Split from the constant version in case there is
+%   a conflict with, say, the signal processing toolbox.)
 
-% 0 : all others
-% 1 : constant
-% 2 : real affine
-% 3 : monomial, posynomial
-narginchk(1,1);
-persistent remap
-if isempty( remap ),
-    remap1 = cvx_remap( 'constant' );
-    remap2 = cvx_remap( 'affine' ) & ~remap1;
-    remap3 = cvx_remap( 'log-valid' ) & ~remap1;
-    remap  = remap1 + 2 * remap2 + 3 * remap3;
+persistent P
+if isempty( P ),
+    P.map = cvx_remap( { 'real' }, { 'l_valid' }, ...
+        { 'r_affine', 'p_convex', 'n_concave' } );
+    P.funcs = { @square_cnst, @square_logv, @square_affn };
 end
-v = remap( cvx_classify( x ) );
+y = cvx_unary_op( P, x );
 
-%
-% Perform the computations for each expression type separately
-%
+function y = square_cnst( x )
+y = builtin( 'power', x, 2 );
 
-vu = sort( v(:) );
-vu = vu([true;diff(vu)~=0]);
-nv = length( vu );
-if nv ~= 1,
-    y = cvx( size( x ), [] );
-end
-for k = 1 : nv,
+function y = square_logv( x )
+y = exp( 2 * log( x ) );
 
-    %
-    % Select the category of expression to compute
-    %
-
-    vk = vu( k );
-    if nv == 1,
-        xt = x;
-    else
-        t = v == vk;
-        xt = cvx_subsref( x, t );
-    end
-
-    %
-    % Perform the computations
-    %
-
-    switch vk,
-        case 0,
-            % Invalid
-            error( 'Disciplined convex programming error:\n    Illegal operation: square( {%s} ).', cvx_class( xt, true, true ) );
-        case 1,
-            % Constant
-            yt = cvx_constant( xt );
-            yt = cvx( yt .* yt );
-        case 2,
-            % Real affine
-            yt = quad_over_lin( xt, 1, 0 );
-        case 3,
-            % Monomial, posynomial
-            yt = exp( 2 * log( xt ) );
-        otherwise,
-            error( 'Shouldn''t be here.' );
-    end
-
-    %
-    % Store the results
-    %
-
-    if nv == 1,
-        y = yt;
-    else
-        y = cvx_subsasgn( y, t, yt );
-    end
-
-end
-
-% Copyright 2005-2016 CVX Research, Inc.
+function y = square_affn( x ) %#ok
+cvx_begin
+    epigraph variable y( size(x) ) nonnegative_
+    { cvx_linearize( x, 'abs' ), 0.5, y } == rotated_lorentz( size(x), 0 ); %#ok
+cvx_end
+    
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

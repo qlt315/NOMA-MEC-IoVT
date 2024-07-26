@@ -11,126 +11,61 @@ function y = log( x )
 %       constructs, respectively. However, such usage is undocumented and
 %       will not be officially supported.
 
-global cvx___
-narginchk(1,1);
 cvx_expert_check( 'log', x );
 
-%
-% Determine the expression types
-%
-
-persistent remap
-if isempty( remap ),
-    remap_0 = cvx_remap( 'nonpositive' );
-    remap_1 = cvx_remap( 'positive' );
-    remap_2 = cvx_remap( 'real-affine', 'concave' ) & ~remap_1 & ~remap_0;
-    remap_3 = cvx_remap( 'monomial' );
-    remap_4 = cvx_remap( 'posynomial' );
-    remap   = remap_1 + 2 * remap_2 + 3 * remap_3 + 4 * remap_4;
+persistent P
+if isempty( P ),
+    P.map = cvx_remap( ...
+        { 'nonpositive', 'n_nonconst' }, ...
+        { 'positive', 'monomial' }, ...
+        { 'g_posynomial' }, { 'l_convex' }, ...
+        { 'concave' }, [0,2,3,4,5] );
+    P.funcs = { [], @log_lkup, @log_posy, @log_lcvx, @log_gen };
 end
-v = remap( cvx_classify( x ) );
+y = cvx_unary_op( P, x );
 
-%
-% Process each type of expression one piece at a time
-%
+function y = log_lkup( x )
+y = cvx( size( x ), cvx_getlog( cvx_basis( x ) ) );
 
-vu = sort( v(:) );
-vu = vu([true;diff(vu)~=0]);
-nv = length( vu );
-if nv ~= 1,
-    y = cvx( size( x ), [] );
-end
-for k = 1 : nv,
+function y = log_posy( x )
+nx = numel( x );
+x = cvx_basis( x );
+[ rx, cx, vx ] = find( x );
+nq = length( vx );
+x = cvx( nq, sparse( rx, 1 : nq, vx ) );
+cvx_begin gp
+    variables v( nq ) w( nq )
+    epigraph variable y( nx )
+    % These next two lines are equivalent to
+    % exp( x ./ cvx_fastref( y, cx ) ) <= w;
+    % But if we did this, then we might end up with a large dynamic range
+    % in coefficients. Breaking it apart like this ensures that we work
+    % only with the logarithms of the coefficients.
+    x <= v .* cvx_fastref( y, cx ); %#ok
+    exp( v ) <= w; %#ok
+    sparse( cx, 1 : nq, 1, nx, nq ) * log( w ) == 1; %#ok
+cvx_end
+y = log( y );
 
-    %
-    % Select the category of expression to compute
-    %
+function y = log_lcvx( x ) %#ok
+nx = numel( x );
+x = cvx_basis( x );
+[ rx, cx, vx ] = find( x );
+nq = length( vx );
+x = cvx( nq, sparse( rx, 1 : nq, vx ) );
+cvx_begin
+    variables w( nq )
+    epigraph variable y( nx )
+    exp( x - cvx_fastref( y, cx ), false ) <= w; %#ok
+    sparse( cx, 1 : nq, 1, nx, nq ) * w == 1; %#ok
+cvx_end
 
-    vk = vu( k );
-    if nv == 1,
-        xt = x;
-    else
-        t = v == vk;
-        xt = cvx_subsref( x, t );
-    end
+function y = log_gen( x ) %#ok
+cvx_begin
+    hypograph variable y(size(x))
+    exp(y) <= x; %#ok
+cvx_end
 
-    %
-    % Perform the computations
-    %
-
-    switch vk,
-        case 0,
-            % Invalid
-            error( 'Disciplined convex programming error:\n    Illegal operation: log( {%s} ).', cvx_class( xt, true, true, true ) );
-        case 1,
-            % Positive constant
-            yt = cvx( log( cvx_constant( xt ) ) );
-        case 2,
-            % Affine, convex (invalid)
-            sx = xt.size_; %#ok
-            yt = [];
-            cvx_begin
-                hypograph variable yt( sx ) 
-                exp( yt ) <= xt;            %#ok
-            cvx_end
-        case 3,
-            % Monomial
-            nb = prod( xt.size_ );
-            [ rx, cx, vx ] = find( xt.basis_ );
-            logs = cvx___.logarithm( rx, 1 );
-            tt = vx ~= 1; nt = sum( tt );
-            bx = sparse( [ ones( nt, 1 ) ; logs ], [ cx( tt ) ; cx ], [ log( vx( tt ) ) ; ones( nb, 1 ) ], full( max( logs ) ), size( xt.basis_, 2 ) );
-            yt = cvx( xt.size_, bx );
-        case 4,
-            % Posynomial
-            sx = xt.size_;
-            xt = xt.basis_;
-            rc = full( sum( xt ~= 0, 1 ) );
-            ru = sort( rc(:) );
-            ru = ru([true;diff(ru)~=0]);
-            nu = length( ru );
-            if nu ~= 1,
-                yt = cvx( sx, [] );
-            end
-            for kk = 1 : nu,
-                rk = ru( kk );
-                if nu == 1,
-                    xtt = xt;
-                else
-                    tt  = rc == rk;
-                    xtt = xt( :, tt );
-                end
-                [ rx, cx, vx ] = find( xtt ); %#ok
-                rx = rx( : ); vx = vx( : );
-                nq = length( vx );
-                vx = log( vx );
-                tz = rx ~= 1;
-                rx = cvx___.logarithm( rx( tz ), 1 );
-                vx = vx + cvx( nq, sparse( rx, find( tz ), 1, full( max( rx ) ), nq ) );
-                vx = reshape( vx, rk, nq / rk );
-                vx = log_sum_exp( vx );
-                if nu == 1,
-                    yt = reshape( vx, sx );
-                else
-                    yt = cvx_subsasgn( yt, tt, vx );
-                end
-            end
-        otherwise,
-            error( 'Shouldn''t be here.' );
-    end
-
-    %
-    % Store the results
-    %
-
-    if nv == 1,
-        y = yt;
-    else
-        y = cvx_subsasgn( y, t, yt );
-    end
-
-end
-
-% Copyright 2005-2016 CVX Research, Inc.
-% See the file LICENSE.txt for full copyright information.
+% Copyright 2005-2014 CVX Research, Inc.
+% See the file LICENSE.tx for full copyright information.
 % The command 'cvx_where' will show where this file is located.

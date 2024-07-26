@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /*
     y = mJdetd(detd,K)
     yields length(y)=sum(K.q) vector with y[k] = -detd(k)*J,

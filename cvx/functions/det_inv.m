@@ -1,4 +1,4 @@
-function cvx_optval = det_inv( X, p )
+function y = det_inv( varargin )
 
 %DET_INV determinant of the inverse of an SPD matrix.
 %   For a square matrix X, DET_INV(X) returns 1.0./DET(X) if X is symmetric
@@ -17,39 +17,36 @@ function cvx_optval = det_inv( X, p )
 %       DET_INV(X) is convex and nonmonotonic in X; therefore, when used in
 %       CVX specifications, its argument must be affine.
 
-narginchk(1,2);
-n = size( X, 1 );
-if ndims( X ) > 2, %#ok
-    error( 'N-D arrays are not supported.' );
-elseif size( X, 2 ) ~= n,
-    error( 'Matrix must be square.' );
-elseif nargin < 2,
+persistent P
+if isempty( P ),
+    P.nargs     = 2;
+    P.args      = @det_inv_args;
+    P.empty     = 1;
+    P.constant  = @det_inv_diag;
+    P.diag      = @det_inv_diag;
+    P.affine    = @det_inv_aff;
+    P.structure = 'psdeig';
+end
+y = cvx_matrix_op( P, varargin );
+
+function [ X, p ] = det_inv_args( X, p )
+if isempty( p ),
     p = 1;
-elseif ~isnumeric( p ) || ~isreal( p ) || numel( p ) ~=  1 || p <= 0,
-    error( 'Second argument must be a positive scalar.' );
+elseif ~( isnumeric(p) && isreal(p) && numel(p)==1 && p>=0 ),
+    cvx_throw( 'Second argument must be a positive scalar.' );
 end
 
-if nnz( X - X' ) ~= 0,
+function y = det_inv_diag( D, p )
+y = prod_inv( D, p );
 
-    cvx_optval = +Inf;
+function y = det_inv_aff( X, p )
+cvx_begin sdp
+    epigraph variable z nonnegative_
+    variable Y(n,n) lower_triangular complex_if(X)
+    prod_inv( real(diag(Y)), 2*p ) <= z;
+    [ diag( D ), Y' ; Y, X ] >= 0;
+cvx_end
 
-else
-
-    n = size( X, 1 );
-    [ R, q ] = chol( X );
-    if q == 0,
-        cvx_optval = prod(diag(R)).^(-p);
-    else
-        eigs = eig( X );
-        if any( eigs <= 0 ),
-            cvx_optval = +Inf;
-        else
-            cvx_optval = prod(eigs).^(-p);
-        end
-    end
-
-end
-
-% Copyright 2005-2016 CVX Research, Inc. 
+% Copyright 2005-2014 CVX Research, Inc. 
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

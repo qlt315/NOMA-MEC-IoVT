@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Two-input NAND gate sizing (GP)</title>
-<link rel="canonical" href="/Users/mcgrant/Repos/CVX/examples/circuit_design/html/simple_NAND2_gate_design.html">
+<link rel="canonical" href="http://cvxr.com/cvx/examples/circuit_design/html/simple_NAND2_gate_design.html">
 <link rel="stylesheet" href="../../examples.css" type="text/css">
 </head>
 <body>
@@ -66,17 +66,9 @@ Amax = linspace(5,45,Npoints);
 Dopt = [];
 
 disp(<span class="string">'Generating the optimal tradeoff curve...'</span>)
-need_sedumi = strncmpi(cvx_solver,<span class="string">'sdpt'</span>,4);
-<span class="keyword">if</span> need_sedumi,
-    warning(<span class="string">'This model does not converge with SDPT3... switching to SeDuMi.'</span>);
-<span class="keyword">end</span>
 <span class="keyword">for</span> k = 1:Npoints
     fprintf(1,<span class="string">'  Amax = %5.2f:'</span>, Amax(k));
     cvx_begin <span class="string">gp</span> <span class="string">quiet</span>
-        <span class="keyword">if</span> need_sedumi,
-            cvx_solver <span class="string">sedumi</span>
-        <span class="keyword">end</span>
-
         <span class="comment">% device width variables</span>
         variable <span class="string">w(N)</span>
 

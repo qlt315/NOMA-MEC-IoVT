@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /*
 %                                                              y = vecsym(x,K)
 % VECSYM  For the PSD submatrices, we let Yk = (Xk+Xk')/2

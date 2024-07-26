@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /*%                                                          L = symbchol(X)
 % SYMBCHOL Symbolic block sparse Cholesky factorization.
 %   L = symbchol(X) returns a structure L that can be used

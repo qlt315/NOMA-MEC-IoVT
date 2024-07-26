@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /*
 %                                                         y = fwdpr1(Lden, b)
 % FWDPR1  Solves "PROD_k L(pk,betak) * y = b", where

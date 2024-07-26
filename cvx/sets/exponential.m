@@ -1,4 +1,4 @@
-function cvx_optpnt = exponential( sx )
+function set = exponential( varargin )
 
 %EXPONENTIAL   Exponential cone.
 %   EXPONENTIAL, called with no arguments, creates three scalar variables X,
@@ -18,38 +18,26 @@ function cvx_optpnt = exponential( sx )
 %   satisfy EXP_P(X,Y) <= Z. If SX is empty, then SX=[1,1] is assumed.
 
 cvx_expert_check( 'exponential' );
-narginchk(0,1);
-
-%
-% Check size vector
-%
-
-if nargin == 0 || isempty( sx ),
-    sx = [1,1]; %#ok
+[ sx, gp ] = cvx_get_dimlist( varargin ); %#ok
+gp = ~isempty(gp) && gp;
+if gp,
+    cvx_begin gp set
+        variables ex( sx ) ey( sx ) ez( sx )
+        x = log( ex ); y = log( ey ); z = log( ez );
 else
-    [ temp, sx ] = cvx_check_dimlist( sx, true ); %#ok
-    if ~temp,
-        error( 'First argument must be a dimension vector.' );
-    end
+    cvx_begin set
+        variable x( sx )
+        variable y( sx ) nonnegative_
+        variable z( sx ) nonnegative_
+end
+    cvx_pushcone( true, 'exponential', [ vec(x)' ; vec(y)' ; vec(z)' ] );
+cvx_end
+if gp,
+    set = cvxtuple( struct( 'x', ex, 'y', ey, 'z', ez ) );
+else
+    set = cvxtuple( struct( 'x', x, 'y', y, 'z', z ) );
 end
 
-
-%
-% Build the cone
-%
-
-cvx_begin set
-    variables x( sx ) y( sx ) z( sx )
-    [ tx, dummy ] = find( cvx_basis( x ) ); %#ok
-    [ ty, dummy ] = find( cvx_basis( y ) ); %#ok
-    [ tz, dummy ] = find( cvx_basis( z ) ); %#ok
-    newnonl( cvx_problem, 'exponential', [ tx(:)' ; ty(:)' ; tz(:)' ] );
-    cvx___.canslack( tx ) = false;
-    cvx___.canslack( ty ) = false;
-cvx_end
-
-cvx_optpnt = cvxtuple( struct( 'x', x, 'y', y, 'z', z ) );
-
-% Copyright 2005-2016 CVX Research, Inc.
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

@@ -15,11 +15,12 @@ function cvx_tic
 global cvx___
 cvx_global
 if ~isempty( cvx___.problems ),
-    error( 'CVX_TIC can only be called when no models are in construction.' );
+    cvx_throw( 'CVX_TIC can only be called when no models are in construction.' );
 end
+cvx___.timers = zeros(1,5,'uint64');
 cvx___.timers(1) = tic;
-cvx___.timers(2:4) = 0;
 
-% Copyright 2005-2016 CVX Research, Inc.
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.
+

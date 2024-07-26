@@ -1,4 +1,4 @@
-function varargout = expression( nm, varargin )
+function vout = expression( varargin )
 
 %EXPRESSION Declares a single CVX object for storing subexpressions.
 %   EXPRESSION x
@@ -20,63 +20,31 @@ function varargout = expression( nm, varargin )
 %
 %   See also EXPRESSIONS.
 
+if nargin > 1,
+    cvx_throw( 'Too many input arguments.\nTrying to declare multiple expression holders? Use the EXPRESSIONS keyword instead.', 1 );
+end
+
 global cvx___
-prob = evalin( 'caller', 'cvx_problem', '[]' );
-if ~isa( prob, 'cvxprob' ),
-    error( 'No CVX model exists in this scope.' );
-elseif isempty( cvx___.problems ) || cvx___.problems( end ).self ~= prob,
-    error( 'Internal CVX data corruption. Please CLEAR ALL and rebuild your model.' );
-elseif nargin > 1,
-    error( 'Too many input arguments.\nTrying to declare multiple expression holders? Use the EXPRESSIONS keyword instead.', 1 ); %#ok
-end
 
-%
-% Step 1: separate the name from the parenthetical, verify the name
-%
+try
 
-toks = regexp( nm, '^\s*([a-zA-Z]\w*)\s*(\(.*\))?\s*$', 'tokens' );
-if isempty( toks ),
-    error( 'Invalid variable specification: %s', nm );
-end
-toks = toks{1};
-x.name = toks{1};
-x.size = toks{2};
-if x.name(end) == '_',
-    error( 'Invalid expression specification: %s\n   Names ending in underscores are reserved for internal use.', nm );
-end
-
-%
-% Step 2: Parse the size. In effect, all we do here is surround what is
-% replace the surrounding parentheses with square braces and evaluate. All
-% that matters is the result is a valid size vector. In particular, it
-% need to be a simple comma-delimited list.
-%
-
-if isempty( x.size ),
-	x.size = [1,1];
-else
-    try
-        x.size = evalin( 'caller', [ '[', x.size(2:end-1), '];' ] );
-    catch exc
-        error( exc.identifier, exc.message );
+    evalin( 'caller', 'cvx_verify' );
+    cvx___.args = { varargin, 1, [] }; %#ok
+    args = evalin( 'caller', 'cvx_parse' );
+    v = cvx_pushexpr( args );
+    if nargout,
+        vout = v;
+    else
+        assignin( 'caller', args(1).name, v );
     end
-    [ temp, x.size ] = cvx_check_dimlist( x.size, true );
-    if ~temp,
-        error( 'Invalid expression specification: %s\n   Dimension list must be a vector of finite nonnegative integers.', nm );
-    end
+        
+catch exc
+    
+    if strncmp( exc.identifier, 'CVX:', 4 ), throw( exc );
+    else rethrow( exc ); end
+    
 end
 
-%
-% Step 3. Initialize
-%
-
-v = cvx( x.size, [] );
-if nargout > 0,
-    varargout{1} = v;
-else
-    assignin( 'caller', x.name, v );
-end
-
-% Copyright 2005-2016 CVX Research, Inc.
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

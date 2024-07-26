@@ -1,4 +1,4 @@
-function z = minus( x, y, cheat )
+function z = minus( x, y )
 
 %   Disciplined convex programming information for MINUS:
 %      Terms in a difference must have opposite curvature. Real affine
@@ -17,10 +17,16 @@ function z = minus( x, y, cheat )
 %      Non-constant expressions (log-convex or log-concave) may not be
 %      involved in a subtraction in disciplined geometric programs.
 
-if nargin < 3, cheat = false; end
-z = plus( x, y, true, cheat );
+persistent P
+if isempty( P ),
+    P.map = {};
+    P.funcs = { @minus_nc };
+    P.constant = [];
+    P.name = '-';
+end
+z = cvx_binary_op( P, x, y );
 
-% Copyright 2005-2016 CVX Research, Inc.
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.
 

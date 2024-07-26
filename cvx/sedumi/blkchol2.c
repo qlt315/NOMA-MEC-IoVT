@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /*
 
 % This file is part of SeDuMi 1.1 by Imre Polik and Oleksandr Romanko

@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /*
  perm = ordmmdmex(X)
    Computes multiple-minimum-degree permutation, for sparse

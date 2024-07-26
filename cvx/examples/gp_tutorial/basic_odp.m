@@ -17,7 +17,11 @@
 
 % discretization size
 M = 50;
-% M = 1000; % takes a few minutes to process constraints
+% The old version of this example took a long time to build with M=1000,
+% because it used for loops to build the y/v/w constraints. This version
+% vectorizes these loops, so 1000 points are handled in a couple of 
+% seconds. I do recommend SeDuMi or MOSEK for this, however.
+% M = 1000; 
 
 % problem constants
 g1 = 0.42;
@@ -34,27 +38,15 @@ C =  WB^2/((M^2)*(Nref^g1)*Dn0);
 pwi = g2 -1;
 pwj = 1+g1-g2;
 
-% optimization variables
 cvx_begin gp
-  variables v(M) y(M) w(M)
-
-  % objective function is the base transmit time
-  tau_B = C*w(1);
-
-  minimize( tau_B )
-  subject to
-    % problem constraints
-    v >= Nmin;
-    v <= Nmax;
-
-    for i = 1:M-1
-      if( mod(i,100) == 0 ), fprintf(1,'progress counter: %d\n',i), end;
-      y(i+1) + v(i)^pwj <= y(i);
-      w(i+1) + y(i)*v(i)^pwi <= w(i);
-    end
-
-    y(M) == v(M)^pwj;
-    w(M) == y(M)*v(M)^pwi;
+    variables v(M) y(M) w(M)
+    % objective function is the base transmit time
+    tau_B = C*w(1);
+    minimize( tau_B )
+    subject to
+        Nmin <= v <= Nmax; %#ok
+        y >= [ y(2:end) ; 0 ] + v .^ pwj; %#ok
+        w >= [ w(2:end) ; 0 ] + y .* v .^ pwi; %#ok
 cvx_end
 
 % plot the basic optimal doping profile

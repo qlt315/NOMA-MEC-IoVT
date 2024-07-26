@@ -1,4 +1,4 @@
-function y = cumsum( x, dim )
+function y = cumsum( varargin )
 
 %Disciplined convex/geometric programming information for SUM:
 %   CUMSUM(X) and CUMSUM(X,DIM) are vectorized forms of addition. So 
@@ -12,46 +12,30 @@ function y = cumsum( x, dim )
 %   violation of the DCP ruleset. For DGPs, addition rules dictate that
 %   the elements of X must be log-convex or log-affine.
 
+persistent P
+if isempty( P ),
+    P.map      = cvx_remap( { 'constant' ; 'affine' ; 'convex' ; 'concave' } );
+    P.funcs    = { @cumsum_1, @cumsum_2, @cumsum_2 };
+    P.zero     = 0;
+    P.reduce   = false;
+    P.reverse  = true;
+    P.dimarg   = 2;
+    P.constant = 1;
+    P.name     = 'cumsum';
+end
+y = cvx_reduce_op( P, varargin{:} );
+
+function x = cumsum_1( x )
+x = builtin( 'cumsum', x, 2 );
+
+function x = cumsum_2( x )
 s = x.size_;
-switch nargin,
-    case 0,
-        error( 'Not enough input arguments.' );
-    case 1,
-        dim = cvx_default_dimension( s );
-    case 2,
-        if ~cvx_check_dimension( dim, false ),
-            error( 'Second argument must be a dimension.' );
-        end
-end
-
-if dim > length( s ) || s( dim ) <= 1,
-
-    y = x;
-
-else
-
-    b = x.basis_;
-    sb = size( b );
-    need_perm = any( s( dim + 1 : end ) > 1 );
-    if need_perm,
-        ndxs = reshape( 1 : prod( s ), s );
-        ndxs = permute( ndxs, [ 1 : dim - 1, dim + 1 : length( s ), dim ] );
-        b = b( :, ndxs );
-    end
-    b = reshape( b, prod( sb ) / s( dim ), s( dim ) );
+if s(2) ~= 1,
+    b = reshape( x.basis_, [], s(2) );
     b = cumsum( b, 2 );
-    b = reshape( b, sb );
-    if need_perm,
-        b( :, ndxs ) = b;
-    end
-    y = cvx( s, b );
-    v = cvx_vexity( y );
-    if any( isnan( v( : ) ) ),
-        error( 'Disciplined convex programming error:\n   Illegal addition encountered (e.g., {convex} + {concave}).', 1 ); %#ok
-    end
-
+    x = cvx( s, reshape( b, [], prod(s) ) );
 end
 
-% Copyright 2005-2016 CVX Research, Inc.
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

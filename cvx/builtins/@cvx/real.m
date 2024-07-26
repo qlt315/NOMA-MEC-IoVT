@@ -1,4 +1,4 @@
-function y = real( x )
+function x = real( x )
 
 %   Disciplined convex/geometric programming information for REAL:
 %      REAL(X) may be freely applied to any CVX expression. However,
@@ -6,8 +6,11 @@ function y = real( x )
 %      concave, log-convex, and log-concave), it is only useful in
 %      the complex affine case.
 
-y = cvx( x.size_, real( x.basis_ ) );
+b = x.basis_;
+if ~isreal( b ),
+    x = cvx( x.size_, real( b ) );
+end
 
-% Copyright 2005-2016 CVX Research, Inc.
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

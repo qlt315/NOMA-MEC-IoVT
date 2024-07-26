@@ -7,7 +7,7 @@ typedef int mwSize;
 #endif
 
 /*
-% Copyright 2005-2016 CVX Research, Inc.
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.
 */
@@ -143,7 +143,7 @@ void mexFunction(
         )
 
 {
-    mwSize n, k, col, nskip, lastcol, *ss_ndxs;
+    mwSize n, k, col, nskip, nskipe, lastcol, *ss_ndxs;
     double *map, *scl, lastnorm;
     int first = 1;
     
@@ -153,6 +153,7 @@ void mexFunction(
     ss_pr   = mxGetPr( prhs[0] );
     ss_mode = nrhs < 2 ? FULL_COMPRESS : (int)mxGetScalar( prhs[1] );
     nskip   = nrhs < 3 ? 0 : (int)mxGetScalar(prhs[2]);
+    nskipe  = nrhs < 4 ? n : (int)mxGetScalar(prhs[3]);
     ss_ndxs = mxCalloc( n, sizeof(mwSize) );
     ss_temp = mxCalloc( n, sizeof(mwSize) );
     
@@ -162,8 +163,8 @@ void mexFunction(
 
     for ( col = 0 ; col != n ; ++col )
         ss_ndxs[col] = col;
-    if ( nskip < n )
-        merge_sort( ss_ndxs + nskip, ss_ndxs + n );
+    if ( nskip < nskipe )
+        merge_sort( ss_ndxs + nskip, ss_ndxs + nskipe );
 
     /*
      * Determine which rows are unique, and which are scales of another row

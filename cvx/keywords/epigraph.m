@@ -31,15 +31,13 @@ function epigraph( varargin )
 %
 %   See also VARIABLE, HYPOGRAPH.
 
-if nargin < 2,
-    error( 'Incorrect syntax for EPIGRAPH VARIABLE. Type HELP EPIGRAPH for details.' );
+if nargin < 2 || ~isequal( varargin{1}, 'variable' ),
+    cvx_throw( 'Incorrect syntax for EPIGRAPH VARIABLE. Type HELP EPIGRAPH for details.' );
 elseif ~iscellstr( varargin ),
-    error( 'All arguments must be strings.' );
-elseif ~strcmp( varargin{1}, 'variable' ),
-    error( 'Incorrect syntax for EPIGRAPH VARIABLE. Type HELP EPIGRAPH for details.' );
+    cvx_throw( 'All arguments must be strings.' );
 end
 evalin( 'caller', sprintf( '%s ', 'variable', varargin{2:end}, ' epigraph_' ) );
 
-% Copyright 2005-2016 CVX Research, Inc.
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

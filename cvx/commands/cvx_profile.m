@@ -14,15 +14,15 @@ if nargin == 1,
         ns = double(flag) ~= 0;
     elseif ischar(flag) && size(flag,1) == 1,
         switch lower(flag),
-            case 'true',
+            case { 'true', 'on' },
                 ns = true;
-            case 'false',
+            case { 'false', 'off' },
                 ns = false;
             otherwise,
-                error( 'String arugment must be ''true'' or ''false''.' );
+                cvx_throw( 'String arugment must be ''true''/''on'' or ''false''/''off''.' );
         end
     else
-        error( 'Argument must be a numeric scalar or a string.' );
+        cvx_throw( 'Argument must be a numeric scalar or a string.' );
     end
     if cvx___.profile ~= ns,
         cvx___.profile = ns;
@@ -38,7 +38,7 @@ if nargin == 0 || nargout > 0,
     sout = s;
 end
   
-% Copyright 2005-2016 CVX Research, Inc.
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.
   

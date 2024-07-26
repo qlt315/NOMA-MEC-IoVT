@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /* ************************************************************
 %                                       ADA = getada2(ADA, DAt,Aord, K)
 % GETADA2  Compute ADA += DAt.q'*DAt.q

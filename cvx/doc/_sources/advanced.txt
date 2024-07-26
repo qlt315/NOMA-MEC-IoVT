@@ -190,12 +190,12 @@ The successive approximation method
 
 Prior to version 1.2, the functions ``exp``, ``log``, ``log_det``,
 and other functions from the exponential family could not be used within
-CVX. Until recently, CVX utilized so-called symmetric primal/dual solvers that
-simply cannot support those functions natively [4]_. More recently, solvers
-such as Mosek have added support for the exponential cone.
+CVX. Unfortunately, CVX utilizes symmetric primal/dual solvers that
+simply cannot support those functions natively [4]_, and a variety of factors
+prevent us from incorporating other types of solvers into CVX.
 
-For solvers that do not natively support the exponential cone,
-we constructed a *successive approximation* heuristic that
+Nevertheless, support for these functions was requested quite frequently.
+For this reason, we constructed a *successive approximation* heuristic that
 allows the symmetric primal/dual solvers to support the exponential
 family of functions. A precise description of the approach is beyond the
 scope of this text, but roughly speaking, the method proceeds as follows:
@@ -220,10 +220,7 @@ Even when it does converge, it is several times slower than the standard solver,
 due to its iterative approach. Therefore, it is best to use it sparingly and carefully.
 Here are some specific usage tips:
 
-- First, if you have access to Mosek, use it, as native support for the exponential
-  cone was added with version 9.
-
-- Barring this, confirm that the log/exp/entropy terms are truly necessary for your model. In 
+- First, confirm that the log/exp/entropy terms are truly necessary for your model. In 
   many cases, an exactly equivalent model can be constructed without them, and that should
   always be preferred. For instance, the constraint
   
@@ -265,8 +262,8 @@ Here are some specific usage tips:
   
         minimize( log_det(X) + trace(C*X) )
    
-- Third, try different solvers. SeDuMi tends
-  to be more effective with the successive approximation method
+- Second, try different solvers. For instance, SeDuMi and MOSEK
+  tend to be more effective with the successive approximation method
   than SDPT3. So if the default solver choice fails to give a 
   solution to your model, try switching to one of these solvers.
   
@@ -419,6 +416,94 @@ correct this problem by replacing the equality constraint with
 
 ``sym`` is a function we have provided that extracts the symmetric part
 of its argument; that is, ``sym(W)`` equals ``0.5 * ( W + W' )``.
+
+.. _log-convexity:
+
+Log convexity
+-------------
+
+A few CVX users have stumbled across a construction that *should* be rejected,
+but is not: usually something similar to this expression:
+
+::
+
+  log( exp(x) + 1 )
+
+This expression is indeed convex, but it does *not* comply with the DCP 
+:ref:`composition rules <compositions>`. After all,
+``log`` is concave and increasing, and therefore can accept a concave argument; but
+``exp(x) + 1`` is convex! What's going on here?
+
+The answer lies in CVX's support for :ref:`geometric programming <gp-mode>`. 
+Geometric programs in CVX must obey a *different* set of rules than standard
+DCP models. But underneath the hood, CVX processes both models in a unified
+manner. In short, every geometric variable ``x`` is related to an *internal*
+variable, say ``x_``, by an exponential; that is, ``x = exp(x_)``. 
+Most geometric programming rules have a corresponding rule in the linear/DCP space.
+
+The net effect is that CVX has a set of rules that govern three additional
+kinds of curvature in CVX: *log-convex*, *log-concave*, and *log-affine*. As the
+name suggests, a log-concave expression is one whose logarithm is convex; so,
+for example, :math:`e^{x^2}` is log-convex (and convex). Similarly, a log-concave
+expression has a concave logarithm, and a log-affine expression has an affine logarithm.
+
+For more information about log-convexity, see
+`Convex Optimization <http://www.stanford.edu/~boyd/cvxbook>`_,
+Section 3.5. Not surprisingly, CVX does not recognize all instances of log-convexity,
+just those that adhere to a finite set of rules:
+
+- A valid log-convex expression is
+
+  - ``exp(`` *expr* ``)``, where *expr* is convex;
+  - a log-convex expression multiplied by a positive constant;
+  - the inverse of a log-concave expression;
+  - a log-convex expression raised to a positive power;
+  - a log-concave expression raised to a negative power;
+  - the sum of log-convex and/or log-affine expressions.
+
+- A valid log-concave expression is
+
+  - ``exp(`` *expr* ``)``, where *expr* is concave;
+  - a log-concave expression multiplied by a positive constant;
+  - the inverse of a log-convex expression;
+  - a log-concave expression raised to a positive power;
+  - a log-convex expression raised to a negative power.
+
+- A valid log-affine expression is
+
+  - any positive constant;
+  - ``exp(`` *expr* ``)``, where *expr* is affine;
+  - a log-affine expression multiplied by a positive constant;
+  - the inverse of a log-affine expression;
+  - a log-affine expression raised to a constant power.
+
+In these rules above we show how ``exp`` is used to "elevate"
+expressons with "standard" curvature to log-curvature; not surprisingly,
+``log`` reverses the effect:
+
+- If *expr* is log-convex, log-concave, or log-affine, then
+  ``log(`` *expr* ``)`` is convex, concave, or affine, respectively.
+
+Log-convex/concave/affine expressions can be employed in objectives
+and constraints. Acceptable log-convex objectives include
+
+- ``minimize(`` *expr* ``)``, where *expr* is log-convex; and
+- ``maximize(`` *expr* ``)``, where *expr* is log-concave.
+
+Acceptable log-convex constraints include
+
+-  An equality constraint, using ``==``, where both sides
+   are log-affine.
+-  A less-than inequality constraint, using ``<=``, where the left
+   side is log-convex and the right side is log-concave.
+-  A greater-than inequality constraint, using ``>=``, where the left
+   side is log-concave and the right side is log-convex.
+
+So there you have it: the hidden log-convexity rules of CVX. Again, we do not
+recommend that you actually use these, as they are meant simply to support
+the geometric programming capability of CVX. In fact, because log-convexity
+requires the :ref:`successive approximation approach <successive>` to solve,
+its use is *unsupported*.
 	
 .. _newfunc:
 

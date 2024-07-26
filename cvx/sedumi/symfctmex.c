@@ -1,5 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /*
  L = symfctmex(X, perm)
    Computes sparse symbolic factor L.L, updated permutation L.perm,

@@ -17,7 +17,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '2.2',
+        VERSION:     '2.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -65,18 +65,16 @@
 <span id="licensing2"></span><h1>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h1>
 <div class="line-block">
 <div class="line">CVX: A system for disciplined convex programming</div>
-<div class="line">© 2012-2019 CVX Research, Inc., Austin, TX.</div>
+<div class="line">© 2015-2014 CVX Research, Inc., Austin, TX.</div>
 <div class="line"><a class="reference external" href="http://cvxr.com">http://cvxr.com</a></div>
 <div class="line"><a class="reference external" href="mailto:info&#37;&#52;&#48;cvxr&#46;com">info<span>&#64;</span>cvxr<span>&#46;</span>com</a></div>
 </div>
 <p>Thank you for using CVX!</p>
-<p>The files contained in the CVX distribution come from several different
-sources and are covered under a variety of licenses. Those files owned by CVX
-Research, Inc. are released under one of two licenses: the <em>CVX Standard
-License</em> and the <em>CVX Professional License</em>. The CVX Professional License
-is not a permissive license, and it does not permit redistribution. The
-CVX Standard License, on the other hand, is in fact the GNU Standard
-License, Version 3, amended with a single additional permission.</p>
+<p>The files contained in the various CVX distributions come from various sources
+and are covered under a variety of licenses. Files created and owned by CVX
+Research, Inc. are governed by two licenses: the <em>CVX Standard License</em> and
+the <em>CVX Professional License</em>. The file README.txt that accompanies each
+package specifies which license applies.</p>
 <div class="section" id="cvx-professional-license">
 <h2>CVX Professional License<a class="headerlink" href="#cvx-professional-license" title="Permalink to this headline">¶</a></h2>
 <p>The full CVX package, including the commercial solver functionality,
@@ -88,8 +86,13 @@ shims/cvx_gurobi.p
 cvx_license.p
 </pre></div>
 </div>
-<p>but future versions may add additional .p files, and they are governed
-by this text as well. Furthermore, all files within the subdirectories</p>
+<p>but future versions may add additional <tt class="docutils literal"><span class="pre">.p</span></tt> files, and they are governed
+by this text as well. Individual .m files may explicitly declare that the
+are governed by the CVX Professional license; currently, the only such file is</p>
+<div class="highlight-none"><div class="highlight"><pre>cvx_grbgetkey.m
+</pre></div>
+</div>
+<p>Furthermore, all files within the subdirectories</p>
 <div class="highlight-none"><div class="highlight"><pre>gurobi/
 mosek/
 </pre></div>

@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /* ************************************************************
    MODULE sdmaux*.c  -- Several low-level subroutines for the
    mex-files in the Self-Dual-Minimization package.

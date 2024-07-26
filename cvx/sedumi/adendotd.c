@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /*
 %                            Ad = Adendotd(dense, d, sparAd, Ablk, blkstart)
 % ADENDOTD  Computes d[k]'*Aj[k] for Lorentz blocks that are to be factored

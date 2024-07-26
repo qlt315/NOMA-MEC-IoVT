@@ -1,4 +1,4 @@
-function prevpath = cvx_startup( quiet )
+function [ prevpath, addpaths, warnings ] = cvx_startup( quiet )
 
 %CVX_STARTUP   Quietly add CVX to your MATLAB path (for startup).
 %    Running CVX_STARTUP upon startup ensures that CVX is properly included
@@ -38,10 +38,22 @@ ps = cvx___.ps;
 cs = cvx___.cs;
 mpath = cvx___.where;
 msub = cvx___.msub;
+warnings = {};
 
 prevpath = path;
+try
+  upath = userpath;
+catch
+  upath = '';
+end
 oldpath = textscan( prevpath, '%s', 'Delimiter', ps );
 oldpath = oldpath{1}(:)';
+if ~isempty(upath),
+    if upath(end) == ps, upath(end) = []; end
+    nupath = sum(find(strcmpi(upath,oldpath),1));
+else
+    nupath = 0;
+end
 other_homes = which( 'cvx_setup.m', '-all' );
 if ~iscell( other_homes ), other_homes = { other_homes }; end
 other_homes = regexprep( other_homes, '.cvx_setup\.m$', '' );
@@ -55,12 +67,21 @@ for k = 0 : length(other_homes),
     tndxs(tndxs) = cellfun(@(x)length(x)<=plen||x(plen+1)==fs,oldpath(tndxs));
     ndxs = ndxs | tndxs;
 end
+if ~isempty( other_homes ),
+    qq = sprintf( '    %s\n', other_homes{:} );
+    warnings{end+1} = sprintf( [ ...
+        'WARNING: other CVX installations were found in your MATLAB path:\n%s'...
+        'They have been removed to prevent conflicts.' ], qq );
+end
 dndx = find(ndxs,1) - 1;
 if isempty(dndx),
-    dndx = +strcmp(oldpath{1},'.');
+    dndx = +strcmp(oldpath{1},'.');    
 end
+dndx = max(dndx,nupath);
 changed = false;
 if any(ndxs),
+    dndx = dndx - sum(ndxs(1:dndx));
+    if nupath && ndxs(nupath), userpath clear; end
     changed = true;
     newpath = horzcat( oldpath(~ndxs) );
     npath = sprintf( [ '%s', pathsep ], newpath{:} );
@@ -69,21 +90,32 @@ if any(ndxs),
 end
 
 addpaths = { 'builtins', 'commands', 'functions', 'lib', 'structures' };
-mpath2 = mpath + fs; npath2 = length(mpath2);
-if ~any(~strncmp(which('vec', '-all'), mpath2, npath2)),
-    addpaths{end+1} = [ 'functions', fs, 'vec_' ]; 
+if ~cvx___.isoctave
+    qq = which('vec');
+    if isempty(qq),
+        addpaths{end+1} = [ 'functions', fs, 'vec_' ]; 
+    elseif ~quiet,
+        warnings{end+1} = sprintf([...
+    'WARNING: An existing copy of "vec.m" was found in your MATLAB path:\n   %s\n', ...
+    'CVX models will not be affected, but SDPT3 depends on this function. So if\n', ...
+    'you delete it, you will need to re-run CVX_SETUP.'], qq );
+    end
 end
-if ~any(~strncmp(which('square', '-all'), mpath2, npath2)),
+qq = which('square');
+if isempty(qq),
     addpaths{end+1} = [ 'functions', fs, 'square_' ]; 
-end
-if ~any(~strncmp(which('narginchk', '-all'), mpath2, npath2)),
-    addpaths{end+1} = [ 'lib', fs, 'narginchk_' ]; 
+elseif ~quiet,
+    warnings{end+1} = sprintf([...
+'WARNING: An existing copy of "square.m" was found in your MATLAB path:\n   %s\n', ...
+'Models using SQUARE() in CVX expressions will not be affected; but outside\n', ...
+'of CVX, this version will be used, and it likely has a different meaning.\n', ...
+'To avoid any confusion, just use X.^2 instead of SQUARE(X) in CVX.'], qq );
 end
 addpaths = strcat( [ mpath, fs ], addpaths );
 if ~isempty(msub),
   mpath2 = [ mpath, fs, 'lib', fs, msub ];
   if exist( mpath2, 'dir' ),
-    addpaths{end+1} = mpath2;
+      addpaths{end+1} = mpath2;
   end
 end
 addpaths{end+1} = mpath;
@@ -101,10 +133,11 @@ if ~quiet,
     else
         fprintf( 'done.\n' );
     end
-    if ~isempty( other_homes ),
-        fprintf( 'WARNING: other CVX installations were found in your MATLAB path:\n' );
-        fprintf( '    %s\n', other_homes{:} );
-        fprintf( 'They have been removed to prevent conflicts.\n' );
+    if nargout < 3,
+        for k = 1 : length(warnings),
+            if k > 1, fprintf( '----\n' ); end
+            fprintf( '%s\n', warnings{k} );
+        end
     end
 end
 if nargout,
@@ -119,6 +152,6 @@ subs = strcat([mpath,fs],{'keywords','sets'});
 cpath.string = sprintf( ['%s',ps], subs{:} );
 cvx___.path = cpath;
 
-% Copyright 2005-2016 CVX Research, Inc.
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

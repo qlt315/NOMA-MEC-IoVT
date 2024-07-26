@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /*
 %                                                y = qblkmul(mu,d,blkstart)
 % QBLKMUL  yields length(y)=blkstart(end)-blkstart(1) vector with

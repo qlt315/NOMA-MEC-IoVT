@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /* ************************************************************
 %              Apart = extractA(At,Ajc,blk0,blk1,blkstart[,blkstart2])
 % EXTRACTA  Fast alternative to

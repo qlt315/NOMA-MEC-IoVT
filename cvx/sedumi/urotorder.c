@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /*
 %                         [u,perm,gjc,g] = urotorder(u,K, maxu,permIN)
 % UROTORDER  Stable reORDERing of triu U-factor by Givens ROTations.

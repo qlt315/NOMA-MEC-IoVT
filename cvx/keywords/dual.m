@@ -46,64 +46,41 @@ function varargout = dual( varargin )
 %
 %   See also VARIABLE, VARIABLES.
 
-if nargin < 2,
-    error( 'Incorrect syntax for DUAL VARIABLE(S). Type HELP DUAL for details.' );
-elseif nargout && nargout ~= length( varargin ) - 1,
-    error( 'Incorrect number of output arguments.' );
-elseif ~iscellstr( varargin ),
-    error( 'All arguments must be strings.' );
+if nargin < 2
+    cvx_throw( 'Incorrect syntax for DUAL VARIABLE(S). Type HELP DUAL for details.' );
+elseif nargout && nargout ~= nargin - 1
+    cvx_throw( 'Incorrect number of output arguments.' );
+elseif isequal( varargin{1}, 'variable' )
+    if nargin > 2
+        cvx_throw( 'Too many input arguments.\nTrying to declare multiple dual variables? Use the DUAL VARIABLES command instead.', 1 ); %#ok
+    end
+elseif ~isequal( varargin{1}, 'variables' )
+    cvx_throw( 'Incorrect syntax for DUAL VARIABLE(S). Type HELP DUAL for details.' );
 end
 
 global cvx___
-prob = evalin( 'caller', 'cvx_problem', '[]' );
-if ~isa( prob, 'cvxprob' ),
-    error( 'No CVX model exists in this scope.' );
-elseif isempty( cvx___.problems ) || cvx___.problems( end ).self ~= prob,
-    error( 'Internal CVX data corruption. Please CLEAR ALL and rebuild your model.' );
-end
 
-if strcmp( varargin{1}, 'variable' ),
-    if nargin > 2,
-        error( 'Too many input arguments.\nTrying to declare multiple dual variables? Use the DUAL VARIABLES command instead.', 1 ); %#ok
-    end
-elseif ~strcmp( varargin{1}, 'variables' ),
-    error( 'Incorrect syntax for DUAL VARIABLE(S). Type HELP DUAL for details.' );
-end
-
-for k = 2 : nargin,
-    arg = varargin{k};
-    toks = regexp( arg, '^\s*([a-zA-Z]\w*)\s*({.*})?\s*$', 'tokens' );
-    if isempty( toks ),
-        error( 'Invalid dual variable specification: %s', arg );
-    end
-    tok = toks{1};
-    nam = tok{1};
-    if length(tok) < 2,
-        siz = {};
-    else
-        siz = tok{2};
-    end
-    if nam(end) == '_',
-        error( 'Invalid dual variable specification: %s\n   Variables ending in underscores are reserved for internal use.', arg );
-    end
-    if ~isempty( siz ),
-        try
-            siz = evalin( 'caller', [ '[', siz(2:end-1), ']' ] );
-        catch exc
-            error( exc.identifier, 'Error attempting to determine size of: %s\n   %s', arg, exc.message );
-        end
-        [ temp, siz ] = cvx_check_dimlist( siz, true );
-        if ~temp,
-            error( 'Invalid dual variable specification: %s\n   Dimension list must be a vector of finite nonnegative integers.', arg );
+try
+    
+    evalin( 'caller', 'cvx_verify' );
+    cvx___.args = { varargin(2:end), 'dual' };
+    args = evalin( 'caller', 'cvx_parse' );
+    for k = 1 : length(args),
+        temp = cvx_pushdual( args(k).name, args(k).args );
+        if nargout, 
+            varargout{k} = temp; %#ok
+        else
+            assignin( 'caller', args(k).name, temp );
         end
     end
-    temp = newdual( prob, nam, siz );
-    if nargout,
-        varargout{k-1} = temp; %#ok
-    end
-    assignin( 'caller', nam, temp );
+    
+catch exc
+    
+    if strncmp( exc.identifier, 'CVX:', 4 ), throw( exc );
+    else rethrow( exc ); end
+    
 end
 
-% Copyright 2005-2016 CVX Research, Inc.
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

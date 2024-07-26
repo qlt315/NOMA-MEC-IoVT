@@ -26,13 +26,13 @@ sp = size( p );
 if isempty( p ),
     p = zeros( 1, 0 );
 elseif length( sp ) > 2 || ~any( sp == 1 ),
-    error( 'First argument must be a vector.' );
+    cvx_throw( 'First argument must be a vector.' );
 end
 n = length( p );
 sx = size(x);
 
 if ~cvx_isconstant( x ),
-    error( 'Second argument must be constant.' );
+    cvx_throw( 'Second argument must be constant.' );
 else
     x = cvx_constant( x );
 end
@@ -47,6 +47,6 @@ xx = exp( sqrt(-1) * xx );
 y  = real( xx ) * real( vv ) + imag( xx ) * imag( vv );
 y  = reshape( y, sx );
 
-% Copyright 2005-2016 CVX Research, Inc. 
+% Copyright 2005-2014 CVX Research, Inc. 
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

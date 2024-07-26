@@ -35,15 +35,12 @@ function coeffs = nonneg_poly_coeffs( deg, trig, mm ) %#ok
 %       NONNEG_POLY_COEFFS is a cvx set specification. See the user guide
 %       for details on how to use sets.
 
-narginchk(1,3);
-
- 
 %
 % Check degree argument
 %
 
-if ~cvx_check_dimension( deg, true ),
-    error( 'Argument must be a nonnegative integer.' );
+if ~( isnumeric(deg) && numel(deg)==1 && isreal(deg) && deg>=0 && deg~=floor(deg) ),
+    cvx_throw( 'Argument must be a nonnegative integer.' );
 end
 
 %
@@ -64,7 +61,7 @@ switch nargin,
         end
     case 3,
         if ~isequal( trig, 'trig' ),
-            error( 'Second argument must be a range, or ''trig''.' );
+            cvx_throw( 'Second argument must be a range, or ''trig''.' );
         end
         trig = true;
 end
@@ -76,9 +73,9 @@ end
 if isempty( mm ),
     mm = [ -Inf, +Inf ];
 elseif ~isa( mm, 'double' ) || ~isreal( mm ) || numel( mm ) ~= 2,
-    error( 'Second argument, if supplied, must be a range [ xmin xmax ].' );
+    cvx_throw( 'Second argument, if supplied, must be a range [ xmin xmax ].' );
 elseif any( mm(1) == mm(2) & isinf( mm(1) ) ),
-    error( 'Intervals [-Inf,-Inf] and [Inf,Inf] are not accepted.' );
+    cvx_throw( 'Intervals [-Inf,-Inf] and [Inf,Inf] are not accepted.' );
 end
 
 %
@@ -155,6 +152,6 @@ else
 
 end
 
-% Copyright 2005-2016 CVX Research, Inc. 
+% Copyright 2005-2014 CVX Research, Inc. 
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

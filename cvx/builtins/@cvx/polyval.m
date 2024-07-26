@@ -19,25 +19,24 @@ sp = size( p );
 if isempty( p ),
     p = zeros( 1, 0 );
 elseif length( sp ) > 2 || ~any( sp == 1 ),
-    error( 'First argument must be a vector.' );
+    cvx_throw( 'First argument must be a vector.' );
 end
 sx = size(x);
 
 persistent remap
 if isempty( remap ),
-    remap_1 = cvx_remap( 'real-affine' );
-    remap_2 = cvx_remap( 'log-convex' );
-    remap = remap_1 + 2 * remap_2;
+    remap = cvx_remap( 'r_affine', 'l_convex' );
 end
 
 if cvx_isconstant( p ),
+    
     p = cvx_constant( p );
     if cvx_isconstant( x ),
         y = cvx( polyval( p, cvx_constant( x ) ) );
         return
     end
     if any( isinf( p ) | isnan( p ) ),
-        error( 'Inf and NaN not accepted here.' );
+        cvx_throw( 'Inf and NaN not accepted here.' );
     end
     ndxs = find( p );
     if isempty( ndxs ),
@@ -63,11 +62,11 @@ if cvx_isconstant( p ),
             % Affine
             y = p(1) * x + p(2);
         otherwise,
-            vu = remap(cvx_classify(x));
+            vu = remap( cvx_classify( x ) );
             p = reshape( p, n, 1 );
             t0 = vu == 0;
             if any( t0 ),
-                error( 'Disciplined convex programming error:\n    Illegal operation: polyval( p, {%s} ).', cvx_class( cvx_subsref( x, t0 ), false, true ) );
+                cvx_throw( 'Disciplined convex programming error:\n    Illegal operation: polyval( p, {%s} ).', cvx_class( cvx_subsref( x, t0 ), false, true ) );
             end
             t1 = vu == 1;
             if any( t1 ),
@@ -76,13 +75,13 @@ if cvx_isconstant( p ),
                 if ~isempty( pd ),
                     pr = diff( [ 0, find(diff(sort(pd))~=0), length(pd) ] );
                     if any( rem( pr, 2 ) ),
-                        error( 'Polynomials in DCPs must be affine, convex, or concave.' );
+                        cvx_throw( 'Polynomials in DCPs must be affine, convex, or concave.' );
                     end
                 end
             end
             t2 = vu == 2;
             if any( t2 ) && any( p < 0 ),
-                error( 'Polynomials in DGPs must have nonnegative coefficients.' );
+                cvx_throw( 'Polynomials in DGPs must have nonnegative coefficients.' );
             end
             if any( t2 ),
                 if all( t2 ),
@@ -120,10 +119,10 @@ elseif cvx_isconstant( x ),
     
 else
     
-    error( 'At least one of the arguments must be constant.' );
+    cvx_throw( 'At least one of the arguments must be constant.' );
     
 end
 
-% Copyright 2005-2016 CVX Research, Inc.
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

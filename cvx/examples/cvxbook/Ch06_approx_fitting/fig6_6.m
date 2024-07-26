@@ -15,7 +15,7 @@
 
 % Input data
 m = 201;  n = 201;  N=200;
-t = [0:m-1]';
+t = (0:m-1)';
 h = (1/9)*((.9).^t) .* (1 - 0.4*cos(2*t));   % sum(h) is approx. 1
 
 H = toeplitz(h', [h(1) zeros(1,n-1)]);
@@ -33,9 +33,7 @@ for i = 1:length(delta)
     disp(['* delta = ' num2str(delta(i)) ' and eta = ' num2str(eta(i))]);
     cvx_begin quiet
     variable u(N+1)
-    minimize ( square_pos(norm(H*u - y_des))/(N+1) + ...
-               eta(i)*square_pos(norm(u))/(N+1) + ...
-               delta(i)*square_pos(norm(D*u))/N )
+    minimize ( norm(H*u-y_des).^2/(N+1)+eta(i)*norm(u).^2/(N+1)+delta(i)*norm(D*u).^2/N )
     cvx_end
     switch(i)
         case 1

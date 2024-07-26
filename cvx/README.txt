@@ -1,6 +1,6 @@
 CVX: A system for disciplined convex programming
 Copyright 2005-2014 CVX Research, Inc.
-Redistributable package
+Professional package
 --------------------------------------------------------
 
 Thank you for your interest in CVX!
@@ -46,19 +46,18 @@ Please see the Support section of the documentation for details:
 LICENSE
 -------
 
-This package (as originally assembled) is governed by the CVX Standard License
-	http://cvxr.com/cvx/doc/license.html#cvx-standard-license
-This is the GNU Public License, Version 3, with an added permission permitting
-connections to other fully free solvers. Please see the files LICENSE.txt and 
-GPL.txt included with this distribution for more precise license terms.
+This package is governed by the terms of the CVX Professional License. This
+package may *not* be redistributed or placed in a public repository without
+the advance written consent of CVX Research, Inc. Please see the file
+LICENSE.txt for more precise license terms.
 
 The contents of the example library in the `examples/` subdirectory
 are *public domain*. We do ask that if you use any of this content in
 your own work, that you acknowledge the source and any specific authors
 cited therein.
 
-The professional version of CVX adds the ability to connect to commercial 
-solvers Gurobi (http://www.gurobi.com/) and MOSEK (http://mosek.com/). 
-Academic licenses for both CVX and the solvers are available at no charge. 
-For more information, please the CVX home page:
-	http://cvxr.com/cvx
+Redistributable packages governed by the GPLv3-based CVX Standard License 
+are available directly from the CVX download page
+	http://cvxr.com/cvx/download
+or from the CVX GitHub repository
+	http://github.com/cvxr/cvx

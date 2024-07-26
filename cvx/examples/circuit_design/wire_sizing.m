@@ -72,10 +72,10 @@ for i = 1 : npts + xnpts,
     if i > npts,
         xi = i - npts;
         delay = xdelays(xi);
-        disp( sprintf( 'Particular solution %d of %d (Tmax = %g)', xi, xnpts, delay ) );
-    else,
+        fprintf( 'Particular solution %d of %d (Tmax = %g)\n', xi, xnpts, delay );
+    else
         delay = delays(i);
-        disp( sprintf( 'Point %d of %d on the tradeoff curve (Tmax = %g)', i, npts, delay ) );
+        fprintf( 'Point %d of %d on the tradeoff curve (Tmax = %g)\n', i, npts, delay );
     end
 
     %
@@ -87,15 +87,15 @@ for i = 1 : npts + xnpts,
         variable G(n,n) symmetric
         variable C(n,n) symmetric
         minimize( sum(x) )
-        G == reshape( GG * [ 1 ; x ], n, n );
-        C == reshape( CC * [ 1 ; x ], n, n );
-        delay * G - C >= 0;
-        0 <= x <= wmax;
+        G == reshape( GG * [ 1 ; x ], n, n ); %#ok
+        C == reshape( CC * [ 1 ; x ], n, n ); %#ok
+        delay * G - C >= 0; %#ok
+        0 <= x <= wmax; %#ok
     cvx_end
 
     if i <= npts,
         areas(i) = cvx_optval;
-    else,
+    else
         xareas(xi) = cvx_optval;
         sizes(:,xi) = x;
 
@@ -113,17 +113,16 @@ for i = 1 : npts + xnpts,
         ylabel('v');
 
         % compute threshold delay, elmore delay, dominant time constant
-        tthres=T(min(find(Y(n,:)>0.5)));
+        tthres=T(find(Y(n,:)>0.5,1,'first'));
         GinvC=full(G\C);
         tdom=max(eig(GinvC));
-        telm=max(sum(GinvC'));
+        telm=max(sum(GinvC,2));
         plot(tdom*[1;1], [0;1], '--', telm*[1;1], [0;1],'--', ...
              tthres*[1;1], [0;1], '--');
-        text(tdom,0.01,'d');
-        text(telm,0.01,'e');
-        text(tthres,0.01,'t');
+        text(tdom,0,'d');
+        text(telm,0,'e');
+        text(tthres,0,'t');
         title(sprintf('Step responses at the 21 nodes for solution (%d), Tmax=%g', xi, delay ));
-        axis([0,2000,-0.01,1]);
 
     end
 
@@ -160,14 +159,14 @@ x  = [ x1 ; x2 ; 0 ];
 h = fill( x, y, ones(4*m+1,1)*[0.9,0.8,0.7,0.6] );
 hold on
 h2 = plot( x, y, '-' );
-axis([ -0.1, m + 0.1, min(y(:))-0.1, max(y(:))+0.1 ]);
+axis([ -0.1, m + 0.1, min(y(:))-0.25, max(y(:))+0.1 ]);
 colormap(gray);
 caxis([-1,1]);
 title('Solutions at points on the tradeoff curve');
 legends = {};
 for k = 1 : xnpts,
     set( h(k), 'EdgeColor', get( h2(k), 'Color' ) );
-    legends{k} = sprintf( 'Tmax=%g', xdelays(k) );
+    legends{k} = sprintf( 'Tmax=%g', xdelays(k) ); %#ok
 end
-legend(legends{:},'Location','southeast');
+legend(legends{:},4);
 

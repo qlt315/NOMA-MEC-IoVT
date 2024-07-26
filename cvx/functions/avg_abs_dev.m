@@ -1,4 +1,4 @@
-function y = avg_abs_dev( x, dim )
+function y = avg_abs_dev( varargin )
 
 %AVG_ABS_DEV   Average absolute deviation (about the mean).
 %   For vectors, AVG_ABS_DEV(X) is the average absolute deviation of X
@@ -17,24 +17,33 @@ function y = avg_abs_dev( x, dim )
 %       Therefore, X must be affine.
 %      
 
-sx = size( x );
-if nargin < 2 || isempty( dim ),
-    dim = find( sx ~= 1 );
-    if isempty( dim ), dim = 1; else dim = dim( 1 ); end
+persistent P
+if isempty( P ),
+	P.map = cvx_remap( { 'real' ; 'r_affine' } );
+    P.funcs = { @avg_abs_dev_cnst, @avg_abs_dev_aff };
+    P.constant = 1;
+	P.zero = NaN;
+	P.reduce = true;
+	P.reverse = false;
+	P.name = 'avg_abs_dev';
+	P.dimarg = 2;
 end
-nd = length( sx );
-if nd >= dim && sx( dim ) > 1,
-    scale = 1.0 ./ sx( dim );
-    y = sum( abs( x - sum( x, dim ) * scale ), dim ) * scale;
-elseif length( sx ) < dim || sx( dim ) == 1,
-    y = zeros( sx );
-else
-    sx( end + 1 : nd ) = 1;
-    sx( dim ) = 1;
-    y = NaN( sy );
-end
+y = cvx_reduce_op( P, varargin{:} );
 
-% Copyright 2005-2016 CVX Research, Inc. 
+function y = avg_abs_dev_cnst( x )
+y = mean( abs( bsxfun( @minus, x, mean( x, 1 ) ) ), 1 );
+
+function y = avg_abs_dev_aff( x )
+[nx,nv] = size(x); %#ok
+% In theory we could just say y = mean(abs(x-mean(x))). However, by
+% adding an extra variable we preserve sparsity.
+cvx_begin
+    variable y( 1, nv );
+    y == sum( x ) / nx; %#ok
+    minimize( sum( abs( x - repmat(y,[nx,1]) ) ) / nx );
+cvx_end
+y = cvx_optval;
+
+% Copyright 2005-2014 CVX Research, Inc. 
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.
-

@@ -23,8 +23,6 @@ function x = subsasgn( x, S, y )
 %         y = cvx(ones(3,1));
 %         y(2) = x;
 
-narginchk(3,3);
-
 %
 % Test subscripts
 %
@@ -36,7 +34,7 @@ try
     temp = reshape( 1 : nlx, szx );
     ndx_x = builtin( 'subsasgn', temp, S, zeros( szy ) );
 catch errmsg
-    error( errmsg.identifier, errmsg.message );
+    throw( errmsg );
 end
 szx_n = size( ndx_x );
 if length( szx_n ) ~= length( szx ),
@@ -48,8 +46,7 @@ end
 % Assign data
 %
 
-x = cvx( x );
-bx = x.basis_;
+bx = cvx_basis( x );
 if any( szx_n < szx ),
     bx = bx( :, ndx_x );
 else
@@ -62,8 +59,7 @@ else
     ndx_x = builtin( 'subsref', temp, S );
     ndx_x = ndx_x( : );
     nlz = length( ndx_x );
-    y = cvx( y );
-    by = y.basis_;
+    by = cvx_basis( y );
     nx = size( bx, 1 );
     [ ny, my ] = size( by );
     if nx < ny,
@@ -85,6 +81,6 @@ end
 
 x = cvx( szx_n, bx );
 
-% Copyright 2005-2016 CVX Research, Inc.
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

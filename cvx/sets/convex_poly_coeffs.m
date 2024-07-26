@@ -1,4 +1,4 @@
-function cvx_optpnt = convex_poly_coeffs( deg, mm ) %#ok
+function coeffs = convex_poly_coeffs( deg, mm ) %#ok
 
 %CONVEX_POLY_COEFFS   Coefficients of convex degree-n polynomials. 
 %   CONVEX_POLY_COEFFS(DEG), where DEG is a nonnegative integer, creates a
@@ -28,16 +28,8 @@ function cvx_optpnt = convex_poly_coeffs( deg, mm ) %#ok
 %       CONVEX_POLY_COEFFS is a cvx set specification. See the user guide
 %       for details on how to use sets.
 
-narginchk(1,2);
-
-%
-% Check argument
-%
-
-if ~cvx_check_dimension( deg, true ),
-    error( 'Argument must be a nonnegative integer.' );
-elseif rem( deg, 2 ) ~= 0 && deg ~= 1,
-    error( 'Degree must be 0, 1, or even.' );
+if ~( isnumeric(deg) && numel(deg)==1 && deg>=0 && ( rem(deg,2)==0 || deg==1 ) ),
+    cvx_throw( 'Degree must be 0, 1, or even.' );
 end
 
 % Check range argument
@@ -47,13 +39,13 @@ if nargin < 2 || isempty( mm ),
     mm = [ -Inf, +Inf ];
 else
     if ~isa( mm, 'double' ) || ~isreal( mm ) || ndims( mm ) > 2 || numel( mm ) ~= 2 && size( mm, 2 ) ~= 2, %#ok
-        error( 'Second argument must be a range [ xmin xmax ] or a matrix of them.' );
+        cvx_throw( 'Second argument must be a range [ xmin xmax ] or a matrix of them.' );
     end
     mm = reshape( mm, 0.5 * numel( mm ), 2 );
     m1 = mm(:,1);
     m2 = mm(:,2);
     if any( ( m1 == m2 ) & isinf( m1 ) ),
-        error( 'Intervals [-Inf,-Inf] and [+Inf,+Inf] are not accepted.' );
+        cvx_throw( 'Intervals [-Inf,-Inf] and [+Inf,+Inf] are not accepted.' );
     end
 end
 
@@ -68,6 +60,6 @@ cvx_begin set
     end
 cvx_end
 
-% Copyright 2005-2016 CVX Research, Inc. 
+% Copyright 2005-2014 CVX Research, Inc. 
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

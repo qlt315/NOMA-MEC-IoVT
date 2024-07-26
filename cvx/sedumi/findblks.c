@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /* ************************************************************
 %                         Ablk = findblks(At,Ablkjc,blk0,blk1,blkstart)
 % FINDBLKS  Find nonzero blocks

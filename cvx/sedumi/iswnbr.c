@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /*
 %                                 [delta,h,alpha] = iswnbr(vSQR,thetaSQR)
 % ISWNBR  Checks feasibility w.r.t. wide region/neighborhood of Sturm-Zhang.

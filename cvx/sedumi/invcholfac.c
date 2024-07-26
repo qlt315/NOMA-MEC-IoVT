@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /*
 %                                                  y = invcholfac(u,K, perm)
 % INVCHOLFAC  Computes y(perm,perm) = u' * u, with u upper triangular.

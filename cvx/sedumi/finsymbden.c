@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /*
 %                                   Lden = finsymbden(LAD,perm,dz,firstq)
 % FINSYMBDEN  Updates perm and dz by inserting the

@@ -17,7 +17,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '2.2',
+        VERSION:     '2.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -100,17 +100,29 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="dcp.html">The DCP ruleset</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="dcp.html#a-taxonomy-of-curvature">A taxonomy of curvature</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dcp.html#top-level-rules">Top-level rules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dcp.html#constraints">Constraints</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="dcp.html#strict-inequalities">Strict inequalities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dcp.html#top-level-rules">Top-level rules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="dcp.html#objectives">Objectives</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcp.html#constraints">Constraints</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="dcp.html#expression-rules">Expression rules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dcp.html#functions">Functions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dcp.html#compositions">Compositions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="dcp.html#monotonicity-in-nonlinear-compositions">Monotonicity in nonlinear compositions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dcp.html#expression-rules">Expression rules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="dcp.html#curvature">Curvature</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcp.html#sign">Sign</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="dcp.html#function-expressions">Function expressions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="dcp.html#function-classification">Function classification</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="dcp.html#domain">Domain</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dcp.html#monotonicity">Monotonicity</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="dcp.html#composition-rules">Composition rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dcp.html#sign-dependent-monotonicity">Sign-dependent monotonicity</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="dcp.html#scalar-quadratic-forms">Scalar quadratic forms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dcp.html#strict-inequalities">Strict inequalities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dcp.html#log-convexity">Log convexity</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="sdp.html">Semidefinite programming mode</a></li>
@@ -158,6 +170,7 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="advanced.html#power-functions-and-p-norms">Power functions and p-norms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="advanced.html#overdetermined-problems">Overdetermined problems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced.html#log-convexity">Log convexity</a></li>
 <li class="toctree-l2"><a class="reference internal" href="advanced.html#adding-new-functions-to-the-atom-library">Adding new functions to the atom library</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="advanced.html#new-functions-via-the-dcp-ruleset">New functions via the DCP ruleset</a></li>
 <li class="toctree-l3"><a class="reference internal" href="advanced.html#new-functions-via-partially-specified-problems">New functions via partially specified problems</a></li>
@@ -178,14 +191,16 @@
 <li class="toctree-l1"><a class="reference internal" href="credits.html">Credits and Acknowledgements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="gurobi.html">Using Gurobi with CVX</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="gurobi.html#about-gurobi">About Gurobi</a></li>
-<li class="toctree-l2"><a class="reference internal" href="gurobi.html#gurobilic">Using Gurobi with CVX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gurobi.html#using-the-bundled-version-of-gurobi">Using the bundled version of Gurobi</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gurobi.html#using-cvx-with-a-standalone-gurobi-installation">Using CVX with a standalone Gurobi installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gurobi.html#selecting-gurobi-as-your-default-solver">Selecting Gurobi as your default solver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="gurobi.html#obtaining-support-for-cvx-and-gurobi">Obtaining support for CVX and Gurobi</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="mosek.html">Using MOSEK with CVX</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="mosek.html#about-mosek">About MOSEK</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mosek.html#id1">Using MOSEK with CVX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mosek.html#using-the-bundled-version-of-mosek">Using the bundled version of MOSEK</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mosek.html#using-cvx-with-separate-mosek-installation">Using CVX with separate MOSEK installation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mosek.html#selecting-mosek-as-your-default-solver">Selecting MOSEK as your default solver</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mosek.html#obtaining-support-for-cvx-and-mosek">Obtaining support for CVX and MOSEK</a></li>
 </ul>

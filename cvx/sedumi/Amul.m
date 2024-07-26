@@ -51,6 +51,7 @@ if ~isempty(dense.cols)
     if transp == 0
         y = y + dense.A*x(dense.cols);
     else
+        y = full(At*x);
         y(dense.cols) = dense.A'*x;
     end
 end

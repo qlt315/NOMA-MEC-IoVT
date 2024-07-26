@@ -27,45 +27,41 @@ function y = huber_pos( x, M, t )
 %       nonincreasing in T. Therefore, when used in CVX specifications, X
 %       must be convex and T must be concave (or affine). Both must be real.
 
-%
-% Check arguments
-%
-
-narginchk(1,3);
-if ~isreal( x ),
-    error( 'First argument must be real.' );
+persistent P
+if isempty( P ),
+    P.map = cvx_remap( ...
+        { { 'any' }, { 'nonpositive' } }, ...
+        { { 'real' } }, ...
+        { { 'convex' }, { 'concave' } }, [0,1,2] );
+    P.funcs = { @huber_pos_c, @huber_pos_nc };
+    P.constant = 1;
+    P.name = 'huber_pos';
 end
 if nargin < 2,
     M = 1;
-elseif ~isreal( M ) || any( M( : ) <= 0 ),
-    error( 'Second argument must be real and positive.' );
+elseif ~( isnumeric(M) && numel(M)==1 && isreal(M) && M>0 ),
+    cvx_throw( 'Second argument must be a positive scalar.' );
 end
 if nargin < 3,
     t = 1;
-elseif ~isreal( t ),
-    error( 'Third argument must be real.' );
 end
-sz = cvx_size_check( x, M, t );
-if isempty( sz ),
-    error( 'Sizes are incompatible.' );
-end
+y = cvx_binary_op( P, x, t, M );
 
-%
-% Compute result
-%
-
+function z = huber_pos_c( x, t, M )
 y = max( x, 0 );
 z = min( y, M );
-y = t .* z .* ( 2 * y - z );
-q = t <= 0;
-if nnz( q ),
-    if length( t ) == 1,
-        y = Inf * ones( sy );
-    else
-        y( q ) = Inf;
-    end
-end
+z = t .* z .* ( 2 * y - z );
 
-% Copyright 2005-2016 CVX Research, Inc. 
+function cvx_optval = huber_pos_nc( x, t, M ) %#ok
+sz = max(numel(x),numel(t)); %#ok
+cvx_begin
+    variable w(sz) nonnegative
+    variable v(sz) nonnegative
+    minimize( quad_over_lin( w, t, 0 ) + ( 2 * M ) * v )
+    x <= w + v; %#ok
+    w <= M * t; %#ok
+cvx_end
+
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

@@ -1,4 +1,4 @@
-function z = ldivide( x, y )
+function z = ldivide( x, y, oper )
 
 %Disciplined convex programming information for LDIVIDE:
 %   For DCP purposes, the LDIVIDE division operator X.\Y is equivalent to
@@ -15,8 +15,19 @@ function z = ldivide( x, y )
 %For vectors, matrices, and arrays, these rules are verified indepdently
 %for each element.
 
-z = times( x, y, '.\' );
+try
+    z = rdivide( y, x, '///' );
+catch exc
+    if nargin < 3, oper = '\'; end
+    oper = strrep( oper, '\', '\\\\' );
+    if isequal( exc.identifier, 'CVX:DCPError' ), %#ok
+        nmessage = regexprep( exc.message, ...
+            '({[^}]*}\s*)///(\s*{[^}]*})', ['$1',oper,'$2'] );
+        cvx_throw( exc.identifier, nmessage );
+    end
+    cvx_throw( exc );
+end
 
-% Copyright 2005-2016 CVX Research, Inc.
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

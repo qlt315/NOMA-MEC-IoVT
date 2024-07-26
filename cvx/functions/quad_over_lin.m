@@ -1,4 +1,4 @@
-function z = quad_over_lin( x, y, dim )
+function z = quad_over_lin( varargin )
 
 %QUAD_OVER_LIN Sum of squares over linear.
 %   Z=QUAD_OVER_LIN(X,Y), where X is a vector and Y is a scalar, is equal to
@@ -25,35 +25,52 @@ function z = quad_over_lin( x, y, dim )
 % Check arguments
 %
 
-narginchk(2,3);
-if ~isreal( y ),
-    error( 'Second argument must be real.' );
-elseif nargin < 3 || isempty( dim ),
-    dim = cvx_default_dimension( size( x ) );
-elseif ~cvx_check_dimension( dim, true ),
-    error( 'Third argument, if supplied, must be a positive integer.' );
-elseif dim == 0,
-    dim = ndims( x ) + 1;
+persistent P
+if isempty( P ),
+    P.map = cvx_remap( ...
+        { { 'any' }, { 'nonpositive' } }, ...
+        { { 'constant' }, { 'positive' } }, ...
+        { { 'l_convex' },  { 'l_concave' } }, ...
+        { { 'l_concave' }, { 'l_convex' } }, ...
+        { { 'r_affine', 'p_convex', 'n_concave' }, { 'positive' } }, ...
+        { { 'r_affine', 'p_convex', 'n_concave' }, { 'concave' } }, ...
+        { { 'affine', 'p_convex', 'n_concave' }, { 'positive' } }, ...
+        { { 'affine', 'p_convex', 'n_concave' }, { 'concave' } }, ...
+        [ 0, 1, 2, 2, 3, 4, 5, 6 ] );
+    P.funcs = { @qol_cnst, @qol_log, @qol_sqr, @qol_lin, @qol_sqa, @qol_lin, @qol_cpx };
+    P.constant = 1;
+    P.name = 'quad_over_lin';
 end
+[ sx, x, y, dim ] = cvx_get_dimension( varargin, 3, 'zero', true );
+if sx(dim) > 1, x = norms( x, 2, dim ); end
+z = cvx_binary_op( P, x, y );
 
-%
-% Perform calculation
-%
+function z = qol_cnst( x, y )
+z = x .^ 2 / y;
 
-z = sum_square_abs( x, dim );
-if length( y ) ~= 1 && ~isequal( size( z ), size( y ) ),
-    error( 'Input size mismatch.' );
-end
-temp = y <= 0;
-inf_fix = any( temp );
-if inf_fix,
-    y( temp ) = 1;
-end
-z = z ./ y;
-if inf_fix,
-    z( temp ) = +Inf;
-end
+function z = qol_log( x, y )
+z = exp( 2 * log( x ) - log( y ) );
 
-% Copyright 2005-2016 CVX Research, Inc.
+function z = qol_sqr( x, y )
+z = square( x ) ./ y;
+
+function z = qol_lin( x, y ) %#ok
+sz = max( size(x), size(y) );
+cvx_begin
+    epigraph variable z( sz ) nonnegative_
+    { cvx_linearize(x), cvx_linearize(y), 0.5 * z } == rotated_lorentz( sz, 0 ); %#ok
+cvx_end
+
+function z = qol_sqa( x, y )
+z = square( abs( x ) ) ./ y;
+
+function z = qol_cpx( x, y ) %#ok
+sz = max( size(x), size(y) );
+cvx_begin
+    epigraph variable z( sz ) nonnegative_
+    { cvx_linearize(x), cvx_linearize(y), 0.5 * z } == rotated_complex_lorentz( sz, 0 ); %#ok
+cvx_end
+
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

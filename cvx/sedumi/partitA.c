@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /* ************************************************************
 %                                        Ablkjc = partitA(At,blkstart)
 % PARTITA  Partition columns of A according to the subscripts listed in blkstart.

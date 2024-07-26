@@ -28,19 +28,19 @@ function binary( varargin )
 %   See also INTEGER, VARIABLE, VARIABLES.
 
 if nargin < 2,
-    error( 'Incorrect syntax for BINARY VARIABLE(S). Type HELP BINARY for details.' );
+    cvx_throw( 'Incorrect syntax for BINARY VARIABLE(S). Type HELP BINARY for details.' );
 elseif ~iscellstr( varargin ),
-    error( 'All arguments must be strings.' );
+    cvx_throw( 'All arguments must be strings.' );
 elseif strcmp( varargin{1}, 'variable' ),
-    evalin( 'caller', sprintf( '%s ', 'variable', varargin{2:end}, 'binary' ) );
+    cvx_throw( 'caller', sprintf( '%s ', 'variable', varargin{2:end}, 'binary' ) );
 elseif strcmp( varargin{1}, 'variables' ),
     for k = 2 : nargin,
         evalin( 'caller', sprintf( '%s ', 'variable', varargin{k}, 'binary' ) );
     end
 else
-    error( 'Incorrect syntax for BINARY VARIABLE(S). Type HELP BINARY for details.' );
+    cvx_throw( 'Incorrect syntax for BINARY VARIABLE(S). Type HELP BINARY for details.' );
 end
 
-% Copyright 2005-2016 CVX Research, Inc.
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

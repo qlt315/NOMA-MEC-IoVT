@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /*
 %                                 ddotX = ddot(d,X,blkstart [, Xblkjc])
 % DDOT Given N x m matrix X, creates (blkstart(end)-blkstart(1)) x m matrix

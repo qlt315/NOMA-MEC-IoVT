@@ -9,14 +9,8 @@ function y = pow_pos( x, p )
 %       expressions, X must be convex. P must be constant, real, and
 %       greater than or equal to 1.
 
-narginchk(2,2);
-if ~isnumeric( x ) || ~isreal( x ) || ~isnumeric( p ) || ~isreal( p ),
-    error( 'Arguments must be real.' );
-elseif any( p(:) <= 1 ),
-    error( 'Second argument must be greater than or equal to 1.\nFor other exponents, use POW_P instead.', 1 ); %#ok
-end
-y = max(x,0).^p;
+y = power( pos( x ), p );
 
-% Copyright 2005-2016 CVX Research, Inc. 
+% Copyright 2005-2014 CVX Research, Inc. 
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

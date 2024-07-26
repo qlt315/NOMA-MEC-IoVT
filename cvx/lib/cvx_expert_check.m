@@ -1,8 +1,8 @@
 function cvx_expert_check( fname, varargin )
 
+if ~isempty( varargin ) && ~any(cellfun('isclass',varargin,'cvx')), return; end
 global cvx___
 if cvx___.expert, return; end
-if ~isempty( varargin ) && ~any(cellfun('isclass',varargin,'cvx')), return; end
 
 url = [ 'file:///', cvx___.where, cvx___.fs, 'doc', cvx___.fs, 'advanced.html#the-successive-approximation-method' ];
 fprintf( 1, [ 'CVX Warning:\n', ...
@@ -19,6 +19,6 @@ cvx___.expert = true;
 % Note that we do *not* call cvx_save_prefs here. We only save the
 % preferences if an explicit setting of "cvx_expert true" is made.
 
-% Copyright 2005-2016 CVX Research, Inc. 
+% Copyright 2005-2014 CVX Research, Inc. 
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

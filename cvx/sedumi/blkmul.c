@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /*
     y = blkmul(mu,d,nL)
     yields length(y)=sum(nL) vector with y[k] = mu(k) * d[k].

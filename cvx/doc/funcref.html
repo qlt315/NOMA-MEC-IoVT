@@ -17,7 +17,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '2.2',
+        VERSION:     '2.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -67,15 +67,12 @@
 likely to encounter in CVX. In some cases, limitations of the underlying solver
 place certain restrictions or caveats on their use:</p>
 <ul class="simple">
-<li>Functions marked with a dagger (†) are not supported natively by manu
-solvers that CVX uses. Models incorporating these functions will be solved
-most effectively by Mosek, the only bundled solver with support for the
-exponential cone upon which these functions are constructed. For all
-other solvers, these functions are handled using a successive
+<li>Functions marked with a dagger (†) are not supported natively by the
+solvers that CVX uses. They are handled using a successive
 approximation method which makes multiple calls to the underlying
-solver, achieving the same final precision. If your problem requires the use
-of the successive approximation method, a warning will be issued.
-This technique is discussed further in
+solver, achieving the same final precision. If you use one of these
+functions, you will be warned that successive approximation will be
+used. This technique is discussed further in
 <a class="reference internal" href="advanced.html#successive"><em>The successive approximation method</em></a>. As this section discusses, this is an experimental
 approach that works well in many cases, but cannot be guaranteed.</li>
 <li>Functions involving powers (<em>e.g.</em>, <tt class="docutils literal"><span class="pre">x^p</span></tt>) and <span class="math">\(p\)</span>-norms
@@ -170,11 +167,11 @@ length <tt class="docutils literal"><span class="pre">n</span></tt>, computes</p
 <p>This function can be used in CVX in two ways:</p>
 <ul class="last simple">
 <li>If <tt class="docutils literal"><span class="pre">p</span></tt> is a variable and <tt class="docutils literal"><span class="pre">x</span></tt> is a constant, then
-<tt class="docutils literal"><span class="pre">polyval(x,p)</span></tt> computes a linear combination of the elements of
+<tt class="docutils literal"><span class="pre">polyval(p,x)</span></tt> computes a linear combination of the elements of
 <tt class="docutils literal"><span class="pre">p</span></tt>. The combination must satisfy the DCP rules for addition
 and scaling.</li>
 <li>If <tt class="docutils literal"><span class="pre">p</span></tt> is a constant and <tt class="docutils literal"><span class="pre">x</span></tt> is a variable, then
-<tt class="docutils literal"><span class="pre">polyval(x,p)</span></tt> constructs a polynomial function of the variable
+<tt class="docutils literal"><span class="pre">polyval(p,x)</span></tt> constructs a polynomial function of the variable
 <tt class="docutils literal"><span class="pre">x</span></tt>. The polynomial must be affine, convex, or concave, and
 <tt class="docutils literal"><span class="pre">x</span></tt> must be real and affine.</li>
 </ul>
@@ -200,17 +197,17 @@ nonnegative.</li>
 see the functions <tt class="docutils literal"><span class="pre">pow_p</span></tt>, <tt class="docutils literal"><span class="pre">pow_pos</span></tt>, and <tt class="docutils literal"><span class="pre">pow_abs</span></tt> in the
 next section for useful alternatives.</p>
 </dd>
-<dt>† <tt class="docutils literal"><span class="pre">power(p,x)</span></tt></dt>
-<dd><p class="first"><tt class="docutils literal"><span class="pre">p.^x</span></tt> and <tt class="docutils literal"><span class="pre">p^x</span></tt>, where <tt class="docutils literal"><span class="pre">p</span></tt> is a real constant and <tt class="docutils literal"><span class="pre">x</span></tt> is a
-real variable. For <tt class="docutils literal"><span class="pre">p^x</span></tt>, both <tt class="docutils literal"><span class="pre">p</span></tt> and <tt class="docutils literal"><span class="pre">x</span></tt> must be scalars.
-Valid values of <tt class="docutils literal"><span class="pre">p</span></tt> include:</p>
+<dt>† <tt class="docutils literal"><span class="pre">power(q,x)</span></tt></dt>
+<dd><p class="first"><tt class="docutils literal"><span class="pre">q.^x</span></tt> and <tt class="docutils literal"><span class="pre">q^x</span></tt>, where <tt class="docutils literal"><span class="pre">q</span></tt> is a real constant and <tt class="docutils literal"><span class="pre">x</span></tt> is a
+real variable. For <tt class="docutils literal"><span class="pre">q^x</span></tt>, both <tt class="docutils literal"><span class="pre">q</span></tt> and <tt class="docutils literal"><span class="pre">x</span></tt> must be scalars.
+Valid values of <tt class="docutils literal"><span class="pre">q</span></tt> include:</p>
 <ul class="simple">
-<li><span class="math">\(p \in \{0,1\}\)</span>. Constant.</li>
-<li><span class="math">\(0 &lt; p &lt; 1\)</span>. Convex and nonincreasing; <tt class="docutils literal"><span class="pre">x</span></tt> must be
+<li><span class="math">\(q \in \{0,1\}\)</span>. Constant.</li>
+<li><span class="math">\(0 &lt; q &lt; 1\)</span>. Convex and nonincreasing; <tt class="docutils literal"><span class="pre">x</span></tt> must be
 concave.</li>
-<li><span class="math">\(p &gt; 1\)</span>. Convex and nondecreasing; <tt class="docutils literal"><span class="pre">x</span></tt> must be convex.</li>
+<li><span class="math">\(q &gt; 1\)</span>. Convex and nondecreasing; <tt class="docutils literal"><span class="pre">x</span></tt> must be convex.</li>
 </ul>
-<p class="last">Negative values of <tt class="docutils literal"><span class="pre">p</span></tt> are not permitted.</p>
+<p class="last">Negative values of <tt class="docutils literal"><span class="pre">q</span></tt> are not permitted.</p>
 </dd>
 <dt><tt class="docutils literal"><span class="pre">std</span></tt></dt>
 <dd>Standard deviation. Convex.</dd>
@@ -504,11 +501,11 @@ positive integer constant.</p>
 </dd>
 <dt><tt class="docutils literal"><span class="pre">semidefinite(n)</span></tt></dt>
 <dd><div class="first last math">
-\[\mathbf{S}^n_+ \triangleq \left\{\,X\in\mathbf{R}^{n\times n}\,~|~\,X=X^T,~X\succeq 0\,\right\}\]</div>
+\[\mathbf{S}^n_+ \triangleq \left\{\,X\in\mathbf{R}^{n\times n}\,~|~\,X=X^T,~\lambda_{\min}(X)\geq 0\,\right\}\]</div>
 </dd>
 <dt><tt class="docutils literal"><span class="pre">hermitian_semidefinite(n)</span></tt></dt>
 <dd><div class="first last math">
-\[\mathbf{H}^n_+ \triangleq \left\{\,Z\in\mathbf{C}^{n\times n}\,~|~\,Z=Z^H,~Z\succeq 0\,\right\}\]</div>
+\[\mathbf{H}^n_+ \triangleq \left\{\,Z\in\mathbf{C}^{n\times n}\,~|~\,Z=Z^H,~\lambda_{\min}(Z)\geq 0\,\right\}\]</div>
 </dd>
 <dt><tt class="docutils literal"><span class="pre">nonneg_poly_coeffs(n)</span></tt></dt>
 <dd><p class="first">The cone of all coefficients of nonnegative polynomials of degree <span class="math">\(n\)</span>; <span class="math">\(n\)</span> must be even:</p>

@@ -1,35 +1,41 @@
 function varargout = cvx_run_solver( sfunc, varargin )
 global cvx___
-settings_arg = varargin{end};
-settings     = varargin{end-1};
+params       = varargin{end};
+settings     = params.settings;
+settings_arg = varargin{end-1};
 inputs       = varargin(1:end-nargout-2);
 dumpfile = '';
 custom_on = false;
 if isstruct( settings ),
-    for f = fieldnames( settings )',
-        sval = settings.(f{1});
-        if isequal( f{1}, 'dumpfile' ),
-            dumpfile = sval;
+    for ff = fieldnames( settings )',
+        f = ff{1};
+        if isequal( f, 'dumpfile' )
+            dumpfile = settings.(f);
         else
-            custom_on = true;
-            inputs{settings_arg}.(f{1}) = sval;
+            custom_on = ~params.quiet;
+            inputs{settings_arg}.(f) = settings.(f);
         end
     end
 end
-if custom_on,
+if custom_on
     fprintf( 'NOTE: custom settings have been set for this solver.\n' );
 end
 if ~isempty( dumpfile ),
     if ~ischar( dumpfile ) || size( dumpfile, 1 ) > 1,
-        error( 'CVX:Dumpfile', 'Invalid filename for the dumpfile.' );
+        cvx_throw( 'Invalid filename for the dumpfile.' );
     elseif length(dumpfile) < 4 || ~strcmpi(dumpfile(end-3:end),'.mat'),
         dumpfile = [ dumpfile, '.mat' ];
     end
-    fprintf( 'Saving output to: %s\n', dumpfile );
-    fprintf( '------------------------------------------------------------\n');
+    if ~params.quiet,
+        fprintf( 'Saving output to: %s\n', dumpfile );
+        fprintf( '------------------------------------------------------------\n');
+    end
     inp_names = cell(1,length(inputs));
     for k = 1 : length(inp_names),
         inp_names{1,k} = inputname(k+1);
+        if isempty(inp_names{1,k}),
+            inp_names{1,k} = sprintf('arg%d',k);
+        end
     end
     dstruct = cell2struct( inputs, inp_names, 2 ); %#ok
     save( dumpfile, '-struct', 'dstruct' );
@@ -39,7 +45,7 @@ if ~isempty( dumpfile ),
         fclose( fid );
         diary( diaryfile );
     end
-elseif custom_on,
+elseif custom_on
     fprintf( '------------------------------------------------------------\n');
 end
 errmsg = [];
@@ -50,6 +56,9 @@ try
    [ varargout{1:nargout} ] = sfunc( inputs{:} );
 catch errmsg
    [ varargout{1:nargout} ] = deal( [] );
+end
+if cvx___.warmstart{1},
+    cvx___.warmstart = [true,varargout];
 end
 if ~isempty( dumpfile ),
     if fid ~= 0,
@@ -72,6 +81,6 @@ if ~isempty( errmsg ),
     rethrow( errmsg );
 end
 
-% Copyright 2005-2016 CVX Research, Inc. 
+% Copyright 2005-2014 CVX Research, Inc. 
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

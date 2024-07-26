@@ -10,7 +10,7 @@ for k = 1 : nargin,
     x  = cvx( varargin{k} );
     sx = x.size_;
     if length( sx ) > 2,
-        error( 'N-D matrices not supported.' );
+        cvx_throw( 'N-D matrices not supported.' );
     end
     b  = x.basis_;
     sz = sz + sx;
@@ -35,6 +35,6 @@ for k = 1 : nargin,
 end
 y = cvx( sz, bz );
 
-% Copyright 2005-2016 CVX Research, Inc.
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

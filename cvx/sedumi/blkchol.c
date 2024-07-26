@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /*
 %          [L.L, L.d, skip, diagadd] = blkchol(L,ADA [,pars [,absd]])
 % BLKCHOL  Computes sparse lower-triangular Cholesky factor L,

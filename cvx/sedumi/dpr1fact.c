@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /*
 %                               [Lden,L.d] = dpr1fact(x, d, Lsym, smult, maxu)
 % DPR1FACT  Factor d[iag] p[lus] r[ank] 1:

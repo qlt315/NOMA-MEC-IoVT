@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /*
  L.tmpsiz = choltmpsiz(L)
 

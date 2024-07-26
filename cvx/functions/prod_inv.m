@@ -1,4 +1,4 @@
-function cvx_optval = prod_inv( x, dim, p )
+function y = prod_inv( varargin )
 
 %PROD_INV inverse of the product of a positive vector.
 %   For a real vector, matrix, or X, PROD_INV(X) returns 1.0 ./ PROD(X) if
@@ -18,23 +18,39 @@ function cvx_optval = prod_inv( x, dim, p )
 %       PROD_INV(X) is convex and nonincreasing in X; therefore, when used
 %       in CVX specifications, its argument must be concave or affine.
 
-narginchk(1,3);
-if ~isreal( x ), 
-    error( 'First argument must be real.' ); 
-elseif nargin < 2,
-    dim = cvx_default_dimension( size( x ) );
-elseif ~cvx_check_dimension( dim ),
-    error( 'Second argument must be a positive integer.' );
+persistent P
+if isempty( P ),
+    P.map = cvx_remap( { 'nonnegative' ; 'l_convex' ; 'l_concave' ; 'concave' } );
+    P.funcs = { @prod_inv_1, @prod_inv_2, @prod_inv_2, @prod_inv_3 };
+    P.zero = 1;
+    P.reduce = true;
+    P.reverse = false;
+    P.constant = 1;
+    P.name = 'prod_inv';
+    P.dimarg = 2;
 end
-if nargin < 2,
+[ sx, x, dim, p ] = cvx_get_dimension( varargin, 2 ); %#ok
+if isempty( p ),
     p = 1;
-elseif ~isnumeric( p ) || ~isreal( p ) || numel( p ) ~=  1 || p <= 0,
-    error( 'Third argument must be a positive scalar.' );
+elseif ~( isnumeric(p) && isreal(p) && numel(p) ~= 1 && p > 0 && p < inf )
+    cvx_throw( 'Third argument must be a finite positive scalar.' );
 end
-tt = any( x < 0, dim );
-cvx_optval = prod( x, dim ) .^ (-p);
-cvx_optval(tt) = +Inf;
+y = cvx_reduce_op( P, x, dim, p );
 
-% Copyright 2005-2016 CVX Research, Inc. 
+function y = prod_inv_1( x, p )
+y = prod( x .^ -p, 1 );
+
+function y = prod_inv_2( x, p )
+y = exp( sum( -p * log( x ) ) );
+
+function y = prod_inv_3( x, p ) %#ok
+[ nx, nv ] = size( x ); %#ok
+cvx_begin
+    epigraph variable y( 1, nv )
+    geo_mean( [ x ; y ], 1, [ ones(nx,1) ; p ] ) >= 1; %#ok
+    cvx_setnneg( y );
+cvx_end
+
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

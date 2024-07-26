@@ -3,14 +3,14 @@ function [ y, symm ] = cvx_s_banded( m, n, symm, lower, upper )
 %CVX_S_BANDED (U,L)-banded matrices.
 
 if nargin < 4,
-    error( 'Bandwidth arguments missing.' );
+    cvx_throw( 'Bandwidth arguments missing.' );
 end
 if ~isnumeric( lower ) || length( lower ) ~= 1 || lower < 0 || lower ~= floor( lower ),
-    error( 'Bandwidth arguments must be nonnegative integers.' );
+    cvx_throw( 'Bandwidth arguments must be nonnegative integers.' );
 elseif nargin < 5, 
     upper = lower;
 elseif ~isnumeric( upper ) || length( upper ) ~= 1 || upper < 0 || upper ~= floor( upper ),
-    error( 'Bandwidth arguments must be nonnegative integers.' );
+    cvx_throw( 'Bandwidth arguments must be nonnegative integers.' );
 end
 
 stflag = length(symm) == 2;
@@ -59,6 +59,6 @@ end
 
 y = sparse( v, r + m * c + 1, 1, nu, m * n );
 
-% Copyright 2005-2016 CVX Research, Inc. 
+% Copyright 2005-2014 CVX Research, Inc. 
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

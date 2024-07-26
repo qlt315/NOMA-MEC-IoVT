@@ -37,7 +37,6 @@ NMOS = struct('R',0.4831, 'Cdb',0.6, 'Csb',0.6, 'Cgb',1, 'Cgs',1);
 PMOS = struct('R',2*0.4831, 'Cdb',0.6, 'Csb',0.6, 'Cgb',1, 'Cgs',1);
 
 % maximum area and power specification
-Amax = 24;
 wmin = 1;
 
 % varying parameters for the tradeoff curve
@@ -46,17 +45,9 @@ Amax = linspace(5,45,Npoints);
 Dopt = [];
 
 disp('Generating the optimal tradeoff curve...')
-need_sedumi = strncmpi(cvx_solver,'sdpt',4);
-if need_sedumi,
-    warning('This model does not converge with SDPT3... switching to SeDuMi.');
-end
 for k = 1:Npoints
     fprintf(1,'  Amax = %5.2f:', Amax(k));
     cvx_begin gp quiet
-        if need_sedumi,
-            cvx_solver sedumi
-        end
-            
         % device width variables
         variable w(N)
 
@@ -64,11 +55,11 @@ for k = 1:Npoints
         device(1:2) = PMOS; device(3:4) = NMOS;
 
         for num = 1:N
-            device(num).R   = device(num).R/w(num);
-            device(num).Cdb = device(num).Cdb*w(num);
-            device(num).Csb = device(num).Csb*w(num);
-            device(num).Cgb = device(num).Cgb*w(num);
-            device(num).Cgs = device(num).Cgs*w(num);
+            device(num).R   = device(num).R/w(num); %#ok
+            device(num).Cdb = device(num).Cdb*w(num); %#ok
+            device(num).Csb = device(num).Csb*w(num); %#ok
+            device(num).Cgb = device(num).Cgb*w(num); %#ok
+            device(num).Cgs = device(num).Cgs*w(num); %#ok
         end
 
         % capacitances
@@ -108,12 +99,12 @@ for k = 1:Npoints
         % objective is the worst-case delay
         minimize( max( [D1 D2 D4] ) )
         subject to
-            area <= Amax(k);
-            w >= wmin;
+            area <= Amax(k); %#ok
+            w >= wmin; %#ok
     cvx_end
     % display and store computed values
     fprintf(1,' delay = %3.2f\n',cvx_optval);
-    Dopt = [Dopt cvx_optval];
+    Dopt = [Dopt cvx_optval]; %#ok
 end
 
 % plot the tradeoff curve

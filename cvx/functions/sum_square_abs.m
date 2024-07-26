@@ -1,24 +1,29 @@
-function y = sum_square_abs( x, dim )
+function y = sum_square_abs( varargin )
 
-%SUM_SQUARE_ABS   Sum of the squares of absolute values.
-%   For real arrays, SUM_SQUARE_ABS(X) computes the same result as
-%   SUM_SQUARE(X). For complex arrays, SUM_SQUARE(X) first computes the
-%   magnitudes of the elements of X, so it compute SUM_SQUARE_ABS(X).
+%SUM_SQUARE   Sum of squares.
+%   For vectors, SUM_SQUARE_ABS(X) is the sum of the squares of the
+%   absolute values of the elements of the vector; i.e., SUM(ABS(X).^2).
 %
-%   Similarly, SUM_SQUARE_ABS(X,DIM) implements SUM_SQUARE(ABS(X),DIM).
+%   For matrices, SUM_SQUARE_ABS(X) is a row vector containing the
+%   application of SUM_SQUARE_ABS to each column. For N-D arrays, the 
+%   SUM_SQUARE_ABS operation is applied to the first non-singleton 
+%   dimension of X.
+%
+%   SUM_SQUARE(X,DIM) takes the sum along the dimension DIM of X.
 %
 %   Disciplined convex programming information:
-%       SUM_SQUARE_ABS(X,...) is convex and nonmonotonic in X. Thus, when
-%       used in CVX expressions, X must be affine. DIM must be constant.
+%       If X is real, then SUM_SQUARE(X,...) is convex and nonmonotonic in
+%       X. If X is complex, then SUM_SQUARE(X,...) is neither convex nor
+%       concave. Thus, when used in CVX expressions, X must be affine. DIM
+%       must be constant.
 
-narginchk(1,2);
-y = conj( x ) .* x;
-if nargin == 2,
-    y = sum( y, dim );
-else
-    y = sum( y );
+try
+    varargin{end+1:2} = [];
+    y = sum_square( varargin{:}, true );
+catch exc
+	cvx_throw( exc );
 end
 
-% Copyright 2005-2016 CVX Research, Inc.
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /*
 %                                             y = givensrot(gjc,g,x,K)
 % GIVENSROT

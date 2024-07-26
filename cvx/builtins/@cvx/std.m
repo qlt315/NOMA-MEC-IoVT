@@ -1,66 +1,65 @@
-function y = std( x, w, dim )
+function y = std( varargin )
 
 %STD    Internal cvx version.
+%This actually implements VAR and STD, controlled by the square_it flag.
 
-if ~cvx_isaffine( x ),
-    error( 'Disciplined convex programming error:\n    VAR is convex and nonmonotonic in X, so X must be affine.', 1 ); %#ok
-elseif nargin > 1 && ~cvx_isconstant( w ),
-    error( 'Weight vector must be constant.' );
+persistent P
+if isempty( remap ),
+    P.map      = cvx_remap( 'affine' );
+    P.funcs    = { @std_1 };
+    P.zero     = NaN;
+    P.reduce   = true;
+    P.reverse  = false;
+    P.constant = [];
+    P.dimarg   = [];
 end
-
-try
-    if nargin < 3, dim = []; end
-    [ x, sx, sy, zx, zy, nx, nv, perm ] = cvx_reduce_size( x, dim ); %#ok
-catch exc
-    error( exc.message );
-end
-
-if nx > 1 && nv > 0,
-    if nargin < 2 || numel( w ) == 1,
-        if nargin == 2 && w,
-            denom = nx;
-        else
-            denom = nx - 1;
-        end
-        % In theory we could just say y = mean(abs(x-mean(x))). However, by
-        % adding an extra variable we preserve sparsity.
-        cvx_begin
-            variable xbar( 1, nv )
-            denom * xbar == sum( x ); %#ok
-            minimize( norms( x - ones(nx,1) * xbar ) / sqrt( denom ) );
-        cvx_end
-        y = cvx_optval;
-    elseif numel( w ) ~= nx || ~isreal( w ) || any( w < 0 ),
-        error( 'Weight vector expected to have %d nonnegative elements.', w );
-    else
-        sw = sum( w(:) );
-        if sw == 0,
-            error( 'Weight vector must not be all zeros.' );
-        end
-        w = w(:) / sw;
-        cvx_begin
-            variable xbar( 1, nv )
-            xbar == sum( w' * x ); %#ok
-            w = sqrt( w );
-            minimize( norms( w( :, ones(1,nv) ) .* ( x - ones(nx,1) * xbar ) ) );
-        cvx_end
-        y = cvx_optval;
-    end
-elseif nx == 0,
-    y = NaN( sy );
+[ sx, x, w, dim, square_it ] = cvx_get_dimension( varargin, 3 );
+if ~isempty( w ),
+    w = false;
+elseif ~( isnumeric(w) && numel(w) ~= length(w) && isreal(w) ), 
+    cvx_throw( 'Second argument must be a logical scalar or a nonnegative vector.' );
+elseif numel(w) == 1,
+    w = w ~= 0;
+elseif numel(w) ~= sx(dim),
+    cvx_throw( 'Weight vector expected to have %d elements.', nx );
+elseif any( w < 0 ),
+    cvx_throw( 'Weight vector must be nonnegative.' );
+elseif ~any( w ),
+    cvx_throw( 'Weight vector must not be all zeros.' );
 else
-    y = zeros( sy );
+    w = w(:) / sum( w );
+end
+if isempty( square_it ),
+    P.name = 'var';
+else
+    P.name = 'std';
+end
+y = cvx_reduce_op( P, x, dim, w, square_it );
+
+function y = std_1( x, w, square_it ) %#ok
+[nx,nv] = size( x );
+if nx == 1,
+    y = cvx( [nx,nv], [] );
+else
+    cvx_begin
+        variable xbar( 1, nv )
+        nw = numel(w);
+        if nw <= 1,
+            nx * xbar == sum( x, 1 ); %#ok
+            xmid = bsxfun( @minus, x, xbar ) / sqrt( nx - ~(nw&&w) );
+        else
+            xbar == sum( w' * x ); %#ok
+            xmid = bsxfun( @times, sqrt( w ), bsxfun( @minus, x, xbar ) );
+        end
+        if square_it
+            minimize( sum_square( xmid, 1 ) );
+        else
+            minimize( norms( xmid, 2, 1 ) );
+        end
+    cvx_end
+    y = cvx_optval;
 end
 
-%
-% Reverse the reshaping and permutation steps
-%
-
-y = reshape( y, sy );
-if ~isempty( perm ),
-    y = ipermute( y, perm );
-end
-
-% Copyright 2005-2016 CVX Research, Inc.
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

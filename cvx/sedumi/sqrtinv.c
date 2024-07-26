@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /*
 %                                                  y = sqrtinv(q,vlab,K)
 % SQRTINV  Computes for PSD-cone, y = (Q / diag(sqrt(vlab)))', so that

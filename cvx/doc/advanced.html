@@ -17,7 +17,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '2.2',
+        VERSION:     '2.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -189,7 +189,7 @@ them into an <span class="math">\(n\)</span>-element cell array <tt class="docut
 <p>This example admittedly is a bit simplistic. With a bit of careful
 arrangement, it is possible to rewrite this model so that the <span class="math">\(n\)</span>
 equality constraints can be combined into a single vector constraint,
-which in turn would require only a single vector dual variable. <a class="footnote-reference" href="#id4" id="id1">[3]</a>
+which in turn would require only a single vector dual variable. <a class="footnote-reference" href="#id5" id="id1">[3]</a>
 For a more complex example that is not amenable to such a
 simplification, see the file</p>
 <div class="highlight-none"><div class="highlight"><pre>examples/cvxbook/Ch07_statistical_estim/cheb.m
@@ -210,11 +210,11 @@ functions like <tt class="docutils literal"><span class="pre">log</span></tt>, <
 </div>
 <p>Prior to version 1.2, the functions <tt class="docutils literal"><span class="pre">exp</span></tt>, <tt class="docutils literal"><span class="pre">log</span></tt>, <tt class="docutils literal"><span class="pre">log_det</span></tt>,
 and other functions from the exponential family could not be used within
-CVX. Until recently, CVX utilized so-called symmetric primal/dual solvers that
-simply cannot support those functions natively <a class="footnote-reference" href="#id5" id="id2">[4]</a>. More recently, solvers
-such as Mosek have added support for the exponential cone.</p>
-<p>For solvers that do not natively support the exponential cone,
-we constructed a <em>successive approximation</em> heuristic that
+CVX. Unfortunately, CVX utilizes symmetric primal/dual solvers that
+simply cannot support those functions natively <a class="footnote-reference" href="#id6" id="id2">[4]</a>, and a variety of factors
+prevent us from incorporating other types of solvers into CVX.</p>
+<p>Nevertheless, support for these functions was requested quite frequently.
+For this reason, we constructed a <em>successive approximation</em> heuristic that
 allows the symmetric primal/dual solvers to support the exponential
 family of functions. A precise description of the approach is beyond the
 scope of this text, but roughly speaking, the method proceeds as follows:</p>
@@ -238,10 +238,7 @@ Even when it does converge, it is several times slower than the standard solver,
 due to its iterative approach. Therefore, it is best to use it sparingly and carefully.
 Here are some specific usage tips:</p>
 <ul>
-<li><p class="first">First, if you have access to Mosek, use it, as native support for the exponential
-cone was added with version 9.</p>
-</li>
-<li><p class="first">Barring this, confirm that the log/exp/entropy terms are truly necessary for your model. In
+<li><p class="first">First, confirm that the log/exp/entropy terms are truly necessary for your model. In
 many cases, an exactly equivalent model can be constructed without them, and that should
 always be preferred. For instance, the constraint</p>
 <div class="highlight-none"><div class="highlight"><pre>sum_log(x) &gt;= 10
@@ -272,8 +269,8 @@ function cannot, unfortunately, be converted in a similar fashion:</p>
 </pre></div>
 </div>
 </li>
-<li><p class="first">Third, try different solvers. SeDuMi tends
-to be more effective with the successive approximation method
+<li><p class="first">Second, try different solvers. For instance, SeDuMi and MOSEK
+tend to be more effective with the successive approximation method
 than SDPT3. So if the default solver choice fails to give a
 solution to your model, try switching to one of these solvers.</p>
 </li>
@@ -396,6 +393,87 @@ correct this problem by replacing the equality constraint with</p>
 </div>
 <p><tt class="docutils literal"><span class="pre">sym</span></tt> is a function we have provided that extracts the symmetric part
 of its argument; that is, <tt class="docutils literal"><span class="pre">sym(W)</span></tt> equals <tt class="docutils literal"><span class="pre">0.5</span> <span class="pre">*</span> <span class="pre">(</span> <span class="pre">W</span> <span class="pre">+</span> <span class="pre">W'</span> <span class="pre">)</span></tt>.</p>
+</div>
+<div class="section" id="log-convexity">
+<span id="id4"></span><h2>Log convexity<a class="headerlink" href="#log-convexity" title="Permalink to this headline">¶</a></h2>
+<p>A few CVX users have stumbled across a construction that <em>should</em> be rejected,
+but is not: usually something similar to this expression:</p>
+<div class="highlight-none"><div class="highlight"><pre>log( exp(x) + 1 )
+</pre></div>
+</div>
+<p>This expression is indeed convex, but it does <em>not</em> comply with the DCP
+<a class="reference internal" href="dcp.html#compositions"><em>composition rules</em></a>. After all,
+<tt class="docutils literal"><span class="pre">log</span></tt> is concave and increasing, and therefore can accept a concave argument; but
+<tt class="docutils literal"><span class="pre">exp(x)</span> <span class="pre">+</span> <span class="pre">1</span></tt> is convex! What&#8217;s going on here?</p>
+<p>The answer lies in CVX&#8217;s support for <a class="reference internal" href="gp.html#gp-mode"><em>geometric programming</em></a>.
+Geometric programs in CVX must obey a <em>different</em> set of rules than standard
+DCP models. But underneath the hood, CVX processes both models in a unified
+manner. In short, every geometric variable <tt class="docutils literal"><span class="pre">x</span></tt> is related to an <em>internal</em>
+variable, say <tt class="docutils literal"><span class="pre">x_</span></tt>, by an exponential; that is, <tt class="docutils literal"><span class="pre">x</span> <span class="pre">=</span> <span class="pre">exp(x_)</span></tt>.
+Most geometric programming rules have a corresponding rule in the linear/DCP space.</p>
+<p>The net effect is that CVX has a set of rules that govern three additional
+kinds of curvature in CVX: <em>log-convex</em>, <em>log-concave</em>, and <em>log-affine</em>. As the
+name suggests, a log-concave expression is one whose logarithm is convex; so,
+for example, <span class="math">\(e^{x^2}\)</span> is log-convex (and convex). Similarly, a log-concave
+expression has a concave logarithm, and a log-affine expression has an affine logarithm.</p>
+<p>For more information about log-convexity, see
+<a class="reference external" href="http://www.stanford.edu/~boyd/cvxbook">Convex Optimization</a>,
+Section 3.5. Not surprisingly, CVX does not recognize all instances of log-convexity,
+just those that adhere to a finite set of rules:</p>
+<ul class="simple">
+<li>A valid log-convex expression is<ul>
+<li><tt class="docutils literal"><span class="pre">exp(</span></tt> <em>expr</em> <tt class="docutils literal"><span class="pre">)</span></tt>, where <em>expr</em> is convex;</li>
+<li>a log-convex expression multiplied by a positive constant;</li>
+<li>the inverse of a log-concave expression;</li>
+<li>a log-convex expression raised to a positive power;</li>
+<li>a log-concave expression raised to a negative power;</li>
+<li>the sum of log-convex and/or log-affine expressions.</li>
+</ul>
+</li>
+<li>A valid log-concave expression is<ul>
+<li><tt class="docutils literal"><span class="pre">exp(</span></tt> <em>expr</em> <tt class="docutils literal"><span class="pre">)</span></tt>, where <em>expr</em> is concave;</li>
+<li>a log-concave expression multiplied by a positive constant;</li>
+<li>the inverse of a log-convex expression;</li>
+<li>a log-concave expression raised to a positive power;</li>
+<li>a log-convex expression raised to a negative power.</li>
+</ul>
+</li>
+<li>A valid log-affine expression is<ul>
+<li>any positive constant;</li>
+<li><tt class="docutils literal"><span class="pre">exp(</span></tt> <em>expr</em> <tt class="docutils literal"><span class="pre">)</span></tt>, where <em>expr</em> is affine;</li>
+<li>a log-affine expression multiplied by a positive constant;</li>
+<li>the inverse of a log-affine expression;</li>
+<li>a log-affine expression raised to a constant power.</li>
+</ul>
+</li>
+</ul>
+<p>In these rules above we show how <tt class="docutils literal"><span class="pre">exp</span></tt> is used to &#8220;elevate&#8221;
+expressons with &#8220;standard&#8221; curvature to log-curvature; not surprisingly,
+<tt class="docutils literal"><span class="pre">log</span></tt> reverses the effect:</p>
+<ul class="simple">
+<li>If <em>expr</em> is log-convex, log-concave, or log-affine, then
+<tt class="docutils literal"><span class="pre">log(</span></tt> <em>expr</em> <tt class="docutils literal"><span class="pre">)</span></tt> is convex, concave, or affine, respectively.</li>
+</ul>
+<p>Log-convex/concave/affine expressions can be employed in objectives
+and constraints. Acceptable log-convex objectives include</p>
+<ul class="simple">
+<li><tt class="docutils literal"><span class="pre">minimize(</span></tt> <em>expr</em> <tt class="docutils literal"><span class="pre">)</span></tt>, where <em>expr</em> is log-convex; and</li>
+<li><tt class="docutils literal"><span class="pre">maximize(</span></tt> <em>expr</em> <tt class="docutils literal"><span class="pre">)</span></tt>, where <em>expr</em> is log-concave.</li>
+</ul>
+<p>Acceptable log-convex constraints include</p>
+<ul class="simple">
+<li>An equality constraint, using <tt class="docutils literal"><span class="pre">==</span></tt>, where both sides
+are log-affine.</li>
+<li>A less-than inequality constraint, using <tt class="docutils literal"><span class="pre">&lt;=</span></tt>, where the left
+side is log-convex and the right side is log-concave.</li>
+<li>A greater-than inequality constraint, using <tt class="docutils literal"><span class="pre">&gt;=</span></tt>, where the left
+side is log-concave and the right side is log-convex.</li>
+</ul>
+<p>So there you have it: the hidden log-convexity rules of CVX. Again, we do not
+recommend that you actually use these, as they are meant simply to support
+the geometric programming capability of CVX. In fact, because log-convexity
+requires the <a class="reference internal" href="#successive"><em>successive approximation approach</em></a> to solve,
+its use is <em>unsupported</em>.</p>
 </div>
 <div class="section" id="adding-new-functions-to-the-atom-library">
 <span id="newfunc"></span><h2>Adding new functions to the atom library<a class="headerlink" href="#adding-new-functions-to-the-atom-library" title="Permalink to this headline">¶</a></h2>
@@ -623,7 +701,7 @@ choices include <tt class="docutils literal"><span class="pre">huber</span></tt>
 <tt class="docutils literal"><span class="pre">matrix_frac</span></tt>, <tt class="docutils literal"><span class="pre">quad_over_lin</span></tt>, <tt class="docutils literal"><span class="pre">sum_largest</span></tt>, and others. Some
 are a bit difficult to read because of diagnostic or error-checking
 code, but these are relatively simple.</p>
-<table class="docutils footnote" frame="void" id="id4" rules="none">
+<table class="docutils footnote" frame="void" id="id5" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
 <tr><td class="label"><a class="fn-backref" href="#id1">[3]</a></td><td>Indeed, a future version of CVX will support the use of the
@@ -631,7 +709,7 @@ Matlab function <tt class="docutils literal"><span class="pre">spdiags</span></t
 the single constraint <tt class="docutils literal"><span class="pre">spdiags(X,0:n-1)==b</span></tt>.</td></tr>
 </tbody>
 </table>
-<table class="docutils footnote" frame="void" id="id5" rules="none">
+<table class="docutils footnote" frame="void" id="id6" rules="none">
 <colgroup><col class="label" /><col /></colgroup>
 <tbody valign="top">
 <tr><td class="label"><a class="fn-backref" href="#id2">[4]</a></td><td>Technically there are a couple of exceptions here. First of all,
@@ -669,6 +747,7 @@ is not easy to use in MATLAB.</td></tr>
 </li>
 <li><a class="reference internal" href="#power-functions-and-p-norms">Power functions and p-norms</a></li>
 <li><a class="reference internal" href="#overdetermined-problems">Overdetermined problems</a></li>
+<li><a class="reference internal" href="#log-convexity">Log convexity</a></li>
 <li><a class="reference internal" href="#adding-new-functions-to-the-atom-library">Adding new functions to the atom library</a><ul>
 <li><a class="reference internal" href="#new-functions-via-the-dcp-ruleset">New functions via the DCP ruleset</a></li>
 <li><a class="reference internal" href="#new-functions-via-partially-specified-problems">New functions via partially specified problems</a></li>

@@ -17,7 +17,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '2.2',
+        VERSION:     '2.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -65,51 +65,61 @@
 <span id="id1"></span><h1>Solvers<a class="headerlink" href="#solvers" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="supported-solvers">
 <span id="id2"></span><h2>Supported solvers<a class="headerlink" href="#supported-solvers" title="Permalink to this headline">¶</a></h2>
-<p>This version of CVX supports four solvers, each with different capabilities:</p>
+<p>As of the writing of this document, CVX supports the following solvers:</p>
 <table border="1" class="docutils">
 <colgroup>
-<col width="66%" />
+<col width="54%" />
+<col width="9%" />
 <col width="4%" />
 <col width="4%" />
-<col width="6%" />
 <col width="5%" />
 <col width="4%" />
-<col width="10%" />
+<col width="4%" />
+<col width="8%" />
+<col width="8%" />
 </colgroup>
 <thead valign="bottom">
 <tr class="row-odd"><th class="head">Solver name</th>
+<th class="head">Included</th>
 <th class="head">LP</th>
 <th class="head">QP</th>
 <th class="head">SOCP</th>
 <th class="head">SDP</th>
 <th class="head">GP</th>
 <th class="head">Integer</th>
+<th class="head">Notes</th>
 </tr>
 </thead>
 <tbody valign="top">
-<tr class="row-even"><td><a class="reference external" href="http://sedumi.ie.lehigh.edu">SeDuMi</a></td>
+<tr class="row-even"><td><a class="reference external" href="https://github.com/sqlp/sedumi/">SeDuMi</a></td>
 <td>Y</td>
 <td>Y</td>
 <td>Y</td>
 <td>Y</td>
-<td>E</td>
+<td>Y</td>
+<td>Y</td>
 <td>N</td>
+<td>1, 4</td>
 </tr>
-<tr class="row-odd"><td><a class="reference external" href="http://www.math.nus.edu.sg/~mattohkc/sdpt3.html">SDPT3</a></td>
+<tr class="row-odd"><td><a class="reference external" href="https://github.com/sqlp/sdpt3">SDPT3</a></td>
 <td>Y</td>
 <td>Y</td>
 <td>Y</td>
 <td>Y</td>
-<td>E</td>
+<td>Y</td>
+<td>Y</td>
 <td>N</td>
+<td>1, 4</td>
 </tr>
 <tr class="row-even"><td><a class="reference external" href="http://gurobi.com">Gurobi</a></td>
 <td>Y</td>
 <td>Y</td>
 <td>Y</td>
+<td>Y</td>
 <td>N</td>
 <td>N</td>
 <td>Y</td>
+<td>2</td>
 </tr>
 <tr class="row-odd"><td><a class="reference external" href="http://mosek.com">MOSEK</a></td>
 <td>Y</td>
@@ -118,45 +128,95 @@
 <td>Y</td>
 <td>Y</td>
 <td>Y</td>
+<td>Y</td>
+<td>2, 4, 5</td>
 </tr>
 <tr class="row-even"><td><a class="reference external" href="http://www.gnu.org/software/glpk/">GLPK</a></td>
-<td>Y</td>
-<td>N</td>
-<td>N</td>
-<td>N</td>
 <td>N</td>
 <td>Y</td>
+<td>N</td>
+<td>N</td>
+<td>N</td>
+<td>N</td>
+<td>Y</td>
+<td>3</td>
+</tr>
+<tr class="row-odd"><td><a class="reference external" href="https://github.com/ifa-ethz/ecos/">ECOS</a></td>
+<td>N</td>
+<td>Y</td>
+<td>N</td>
+<td>Y</td>
+<td>N</td>
+<td>Y</td>
+<td>N</td>
+<td>3, 4</td>
+</tr>
+<tr class="row-even"><td><a class="reference external" href="https://github.com/cvxgrp/scs/">SCS</a></td>
+<td>N</td>
+<td>Y</td>
+<td>Y</td>
+<td>Y</td>
+<td>Y</td>
+<td>Y</td>
+<td>N</td>
+<td>3, 6</td>
 </tr>
 </tbody>
 </table>
-<p>(key: Y = Yes, N = No, E = Experimental)</p>
-<p>Each solver has different capabilities and different levels of performance. For instance,
-SeDuMi <a class="reference internal" href="credits.html#stu99" id="id3">[Stu99]</a>, SDPT3 <a class="reference internal" href="credits.html#ttt03" id="id4">[TTT03]</a>, and MOSEK support all of the continuous (non-integer) models
-that CVX itself supports, while Gurobi is more limited, in that it does not support semidefinite
-constraints; and GLPK is limited even further. On the other hand, Gurobi, GLPK, and
-MOSEK support integer consraints, while SeDuMi and SDPT3 do not.</p>
-<p>SeDuMi and SDPT3 are included with the standard CVX distribution, so you do not need
-to download an additional solver to start using CVX. We have also entered into contractual
-arrangements with the developers of Gurobi and MOSEK that allow us to ship their binaries
-with CVX as well, but using those solvers requires a CVX Professional license. Due to
-license differences, we are <em>not</em> able to supply GLPK with CVX. However,</p>
-<p>If you are having difficulty with one solver, <em>please try another</em>. No one solver performs
-better than the others on <em>every</em> model CVX can generate&#8212;including commercial solvers.
-That said, if you encounter a problem that one solver can handle well and another
-cannot, please send us a bug report (see <a class="reference internal" href="support.html#support"><em>Support</em></a>) and we will forward the
-results to the solver&#8217;s authors.</p>
-<p>We have created special sections in this user guide for using Gurobi and MOSEK with CVX:</p>
-<ul class="simple">
+<p>As you can see from the chart, each solver has different capabilities. No
+solver <em>natively</em> supports all of the models that CVX generates. Furthermore,
+the solvers differ greatly in performance. Most users will need to learn to
+switch between solvers, and experiment to determine which is best for their
+application; see <a class="reference internal" href="#solver-selection"><em>Selecting a solver</em></a> below.</p>
+<p>Solver-specific notes:</p>
+<ol class="arabic simple">
+<li>SeDuMi <a class="reference internal" href="credits.html#stu99" id="id3">[Stu99]</a>, and SDPT3 <a class="reference internal" href="credits.html#ttt03" id="id4">[TTT03]</a> are included with all CVX packages.
+They are drawn directly from the source links offered above. If you wish to
+use them outside of CVX, simply run their respective installation scripts
+<cite>sdpt3/install_sdpt3</cite> and <cite>sedumi/install_sedumi</cite> to add the necessary
+subdirectories to your MATLAB path; then save your path to preserve that
+configuration for future MATLAB sessions. You can do this before or after
+running <tt class="docutils literal"><span class="pre">cvx_setup</span></tt>.</li>
+<li>Special, &#8220;CVX-locked&#8221; versions of Gurobi and MOSEK have been included with
+the non-redistributable CVX packages. These solvers require a
+<a class="reference internal" href="intro.html#licensing"><em>CVX Professional license</em></a>, and they work <em>only</em> with CVX.
+If you wish to use them outside of CVX, you will need to license their full
+versions from their respective vendors. We have created special sections in
+this user guide for using Gurobi and MOSEK with CVX:<ul>
 <li>Gurobi: <a class="reference internal" href="gurobi.html#gurobi"><em>Using Gurobi with CVX</em></a></li>
 <li>Mosek:  <a class="reference internal" href="mosek.html#mosek"><em>Using MOSEK with CVX</em></a></li>
 </ul>
-<p>Support for GLPK should be considered experimental.</p>
+</li>
+<li>GLPK, ECOS, and SCS are <em>not</em> included with CVX, and must be installed and
+compiled separately. We have included links to their home pages above. Once
+you have installed them, and added their MEX files to your MATLAB path,
+simply re-run <tt class="docutils literal"><span class="pre">cvx_setup</span></tt> and they will be connected to CVX.</li>
+<li>SeDuMi, SDPT3, MOSEK, and ECOS rely upon CVX&#8217;s experimental
+<a class="reference internal" href="advanced.html#successive"><em>successive approximation method</em></a> to support geometric
+problems and models using functions from the exponential, logarithm, and
+entropy families. SCS is the only solver in the list above that handles
+these problems &#8220;natively&#8221;.</li>
+<li>SDP support for MOSEK requires version 7 or later, which is the version
+bundled with CVX. We strongly encourage users of an external Mosek solver
+to ugprade to the latest version.</li>
+<li>SCS is an experimental solver designed to solve larger problems than other
+CVX solvers typically handle, but to more modest levels of accuracy.
+You may need to reduce CVX&#8217;s precision targets with the <tt class="docutils literal"><span class="pre">cvx_precision</span></tt>
+command to achieve good performance.</li>
+</ol>
 </div>
 <div class="section" id="selecting-a-solver">
 <span id="solver-selection"></span><h2>Selecting a solver<a class="headerlink" href="#selecting-a-solver" title="Permalink to this headline">¶</a></h2>
-<p>The default solver is currently SDPT3. We have found that SeDuMi is faster for most
-problems, but unfortunately not as reliable. None of the solvers are perfect, however,
-and you may find for your application that another solver is preferred.</p>
+<p>The default solver is currently SDPT3. Of the two free, bundled solvers, we
+have found that SeDuMi is faster for most problems, but unfortunately not as
+reliable, which is why SDPT3 is selected as the default. In fact, <em>none</em> of
+the solvers&#8212;including the commercial solvers&#8212;are perfect, though we do
+find that the commercial solvers tend to be faster and more reliable. No one
+solver performs better than the others on <em>every</em> model that CVX can generate.</p>
+<p>Therefore, if you are having difficulty with one solver, <em>please try another</em>.
+That said, if you encounter a problem that one solver can handle well and another
+cannot, please send us a bug report (see <a class="reference internal" href="support.html#support"><em>Support</em></a>) and we will forward the
+results to the solver&#8217;s authors.</p>
 <p>To see which solver is currently selected, simply type</p>
 <div class="highlight-none"><div class="highlight"><pre>cvx_solver
 </pre></div>

@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /*
 %                                      [zhi,zlo] = quadadd(xhi,xlo,y)
 % QUADADD   Compute (zhi+zlo) = (xhi+xlo) + y.

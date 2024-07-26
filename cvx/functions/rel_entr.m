@@ -20,18 +20,33 @@ function z = rel_entr( x, y )
 %       to be nonnegative, hence there is no need to add additional
 %       constraints X >= 0 or Y >= 0 to enforce this.
 
-narginchk(2,2);
-if ~isreal( x ) || ~isreal( y ),
-    error( 'Arguments must be real.' );
-end
-t1 = x < 0  | y <= 0;
-t2 = x == 0 & y >= 0;
-x  = max( x, realmin );
-y  = max( y, realmin );
-z  = x .* log( x ./ y );
-z( t1 ) = +Inf;
-z( t2 ) = 0;
+cvx_expert_check( 'rel_entr', x, y );
 
-% Copyright 2005-2016 CVX Research, Inc.
+persistent P
+if isempty( P ),
+    P.map = cvx_remap( ...
+        { { 'negative' }, { 'any' } }, ...
+        { { 'any' }, { 'nonpositive' } }, ...
+        { { 'real' } }, ...
+        { { 'r_affine' }, { 'concave' } }, ...
+        [0,0,1,2] );
+    P.funcs = { @rel_entr_1, @rel_entr_2 };
+    P.constant = 1;
+    P.name = 'rel_entr';
+    P.test = @rel_entr_test;
+end
+z = cvx_binary_op( P, x, y );
+
+function z = rel_entr_1( x, y )   
+z  = x .* builtin( 'log', x ./ y );
+
+function z = rel_entr_2( x, y ) %#ok
+sz = max( numel(y), numel(x) );
+cvx_begin
+    epigraph variable z( sz )
+    { -z, x, y } == exponential( sz ); %#ok
+cvx_end
+
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

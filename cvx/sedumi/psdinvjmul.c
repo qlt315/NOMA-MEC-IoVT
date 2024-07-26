@@ -1,4 +1,3 @@
-#pragma clang diagnostic ignored "-Wimplicit-function-declaration"
 /*
 %                                          z = psdinvjmul(xlab,xfrm, y, K)
 % PSDINVJMUL  solves x jmul z = y, with x = XFRM*diag(xlab)*XFRM'

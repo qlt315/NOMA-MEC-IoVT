@@ -1,4 +1,4 @@
-function [ cvx_optpnt, mode ] = geo_mean_cone( sx, dim, w, mode )
+function [ set, mode ] = geo_mean_cone( varargin )
 
 %GEO_MEAN_CONE    Cones involving the geometric mean.
 %   GEO_MEAN_CONE(N), where N is a positive integer, creates a column vector
@@ -62,35 +62,10 @@ function [ cvx_optpnt, mode ] = geo_mean_cone( sx, dim, w, mode )
 % Check size vector
 %
 
-[ temp, sx ] = cvx_check_dimlist( sx, true );
-if ~temp,
-    error( 'First argument must be a dimension vector.' );
-end
-
-%
-% Check dimension
-%
-
-if nargin < 4,
-    mode = '';
-end
-if nargin == 2 && ischar( dim ),
-    mode = dim;
-    dim = cvx_default_dimension( sx );
-elseif nargin < 2 || isempty( dim ),
-    dim = cvx_default_dimension( sx );
-elseif ~cvx_check_dimension( dim, true ),
-    error( 'Second argument must be a nonnegative integer.' );
-end
+[ sx, dim, w, mode ] = cvx_get_dimension( varargin, 2, 'nox', true );
 sy = sx;
-nd = length( sx );
-if dim <= 0 || dim > nd || sx( dim ) == 1,
-    nx  = 1;
-    dim = 0;
-else
-    nx = sx( dim );
-    sy( dim ) = 1;
-end
+nx = sx( dim );
+sy( dim ) = 1;
 
 %
 % Check weight vector
@@ -102,13 +77,13 @@ if nargin == 3 && ischar( w ),
 elseif nargin < 3 || isempty( w ),
     w = [];
 elseif numel( w ) ~= length( w ) || ~isnumeric( w ) || ~isreal( w ) || any( w < 0 ),
-    error( 'Third argument must be a vector of nonnegative real numbers.' );
+    cvx_throw( 'Third argument must be a vector of nonnegative real numbers.' );
 elseif length( w ) ~= nx,
-    error( 'Third argument must be a vector of length %d', nx );
+    cvx_throw( 'Third argument must be a vector of length %d', nx );
 elseif nx ~= 0 && ~any( w ),
-    error( 'At least one of the weights must be nonzero.' );
+    cvx_throw( 'At least one of the weights must be nonzero.' );
 end
-if ~isempty( w ) && any( w ~= floor( w ) ),
+if numel( w ) > 1 && any( w ~= floor( w ) ),
     [ nn, dd ] = rat( w );
     dmax = dd(1);
     for k = 2 : length(dd), dmax = lcm(dmax,dd(k)); end
@@ -122,11 +97,11 @@ end
 if isempty( mode ),
     mode = 'hypo';
 elseif ~ischar( mode ) || size( mode, 1 ) > 1,
-    error( 'Mode must be a string.' );
+    cvx_throw( 'Mode must be a string.' );
 else
     lmode = lower(mode);
     if ~any( strcmp( lmode, { 'hypo', 'pos', 'abs', 'cabs', 'func' } ) ),
-        error( [ 'Invalid mode string: ', mode ] );
+        cvx_throw( [ 'Invalid mode string: ', mode ] );
     end
     mode = lmode;
 end
@@ -259,8 +234,8 @@ if ~wbasic,
             w(wj_t)  = bitand( w(wj_t), wt );
         catch
             wt       = bitcmp( uint64(wt) );
-            w(wi_t)  = double( bitand( uint64(w(wi_t)), wt ) );
-            w(wj_t)  = double( bitand( uint64(w(wj_t)), wt ) );
+            w(wi_t)  = bitand( uint64(w(wi_t)), wt );
+            w(wj_t)  = bitand( uint64(w(wj_t)), wt );
         end
         % Update the count
         ndx1 = [ ndx1, length(ndxs) ]; %#ok
@@ -268,7 +243,6 @@ if ~wbasic,
         ndx1 = ndx1( ff ~= 0.5 & ff ~= 0 );
     end
 end
-
 %
 % Now do standard left-to-right combining
 %    x1^3 x2^2 x3^3 = x1 x1 x1 x2 x2 x3 x3 x3
@@ -368,8 +342,8 @@ if nleft > 1,
 end
 x = reshape( x, sx );
 y = reshape( y, sy );
-cvx_optpnt = cvxtuple( struct( 'x', x, 'y', y ) );
+set = cvxtuple( struct( 'x', x, 'y', y ) );
 
-% Copyright 2005-2016 CVX Research, Inc.
+% Copyright 2005-2014 CVX Research, Inc.
 % See the file LICENSE.txt for full copyright information.
 % The command 'cvx_where' will show where this file is located.

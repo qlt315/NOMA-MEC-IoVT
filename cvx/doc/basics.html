@@ -17,7 +17,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '2.2',
+        VERSION:     '2.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -111,7 +111,7 @@ variable Q(5,5) complex semidefinite
 </pre></div>
 </div>
 <p>In this example, <tt class="docutils literal"><span class="pre">x</span></tt> is a nonnegative vector, and <tt class="docutils literal"><span class="pre">Z</span></tt> is a real symmetric PSD matrix
-and <tt class="docutils literal"><span class="pre">Q``is</span> <span class="pre">a</span> <span class="pre">complex</span> <span class="pre">Hermitian</span> <span class="pre">PSD</span> <span class="pre">matrix.</span> <span class="pre">As</span> <span class="pre">we</span> <span class="pre">will</span> <span class="pre">see</span> <span class="pre">below,</span> <span class="pre">``hermitian</span> <span class="pre">semidefinite</span></tt>
+and <tt class="docutils literal"><span class="pre">Q</span></tt> is a complex Hermitian PSD matrix. As we will see below, <tt class="docutils literal"><span class="pre">hermitian</span> <span class="pre">semidefinite</span></tt>
 would be an equivalent choice for this third case.</p>
 <p>For MIDCPs, the <tt class="docutils literal"><span class="pre">integer</span></tt> and <tt class="docutils literal"><span class="pre">binary</span></tt> keywords are used to declare integer
 and binary variables, respectively:</p>
@@ -156,7 +156,7 @@ determined by intersection. For example, <tt class="docutils literal"><span clas
 valid combination. That said, CVX does reject combinations such as
 <tt class="docutils literal"><span class="pre">symmetric</span> <span class="pre">lower_triangular</span></tt> when a more reasonable alternative
 exists&#8212;<tt class="docutils literal"><span class="pre">diagonal</span></tt>, in this case. Furthermore, if the keywords fully
-conflict, such that emph{no} non-zero matrix that satisfies all keywords,
+conflict, such that <em>no</em> non-zero matrix that satisfies all keywords,
 an error will result.</p>
 <p>Matrix-specific keywords can be applied to
 <span class="math">\(n\)</span>-dimensional arrays as well: each 2-dimensional &#8220;slice&#8221; of the
